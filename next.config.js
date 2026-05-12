@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   // Uncomment the following lines to deploy to GitHub Pages as a static site:
   // output: 'export',
-  // basePath: '/ngramlab',
+  // basePath: '/NGramLab',
   // images: { unoptimized: true },
 };
 
