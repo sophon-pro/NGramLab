@@ -18,7 +18,7 @@ import {
   Badge,
 } from "@/components/ui/primitives";
 import { useExperiment } from "@/lib/store/experiment";
-import { splitDataset } from "@/lib/nlp/split";
+import { splitDatasetWithTrainVocabulary } from "@/lib/nlp/split";
 import { formatNumber } from "@/lib/utils";
 import {
   PieChart,
@@ -49,11 +49,19 @@ export default function SplitPage() {
       return;
     }
     try {
-      const r = splitDataset(
+      const r = splitDatasetWithTrainVocabulary(
         preprocessed.tokens,
         splitRatios.train,
         splitRatios.validation,
-        splitRatios.test
+        splitRatios.test,
+        {
+          startToken: preprocessed.tokens.includes("<s>") ? "<s>" : undefined,
+          endToken: preprocessed.tokens.includes("</s>") ? "</s>" : undefined,
+          unkToken: "<UNK>",
+          minTrainCount: 2,
+          shuffleSentences: true,
+          seed: 42,
+        }
       );
       setSplit(r);
     } catch {
@@ -238,8 +246,12 @@ export default function SplitPage() {
                 ))}
               </div>
               <div className="mt-auto rounded-lg border border-accent-400/30 bg-accent-400/10 px-3 py-2 text-xs leading-relaxed text-accent-800 dark:text-accent-200">
-                <strong>Tip:</strong> The split uses contiguous token slices:
-                train first, validation next, test last.
+                <strong>Tip:</strong> Sentences are shuffled with a fixed seed,
+                then validation/test words outside the training vocabulary become
+                <code className="mx-1 rounded bg-white/70 px-1 font-mono dark:bg-ink-950/70">
+                  &lt;UNK&gt;
+                </code>
+                .
               </div>
             </CardContent>
           </Card>

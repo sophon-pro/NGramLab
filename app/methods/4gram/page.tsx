@@ -17,8 +17,7 @@ import {
 } from "lucide-react";
 import { Button, Card, CardContent, FadeIn } from "@/components/ui/primitives";
 import { SAMPLE_CORPORA } from "@/lib/sample-corpus";
-import { DEFAULT_PREPROCESS_OPTIONS, preprocessText } from "@/lib/nlp/preprocess";
-import { splitDataset } from "@/lib/nlp/split";
+import { DEFAULT_PREPROCESS_OPTIONS } from "@/lib/nlp/preprocess";
 import { buildAllCounts } from "@/lib/nlp/ngrams";
 import {
   perplexityBackoff,
@@ -26,7 +25,7 @@ import {
 } from "@/lib/nlp/perplexity";
 import { generateText, makeInterpolationScorer } from "@/lib/nlp/generator";
 import { useExperiment } from "@/lib/store/experiment";
-import type { LambdaWeights } from "@/types/nlp";
+import type { DatasetSplit, LambdaWeights, PreprocessResult } from "@/types/nlp";
 
 const LAMBDA_PRESETS: { name: string; lambdas: LambdaWeights }[] = [
   {
@@ -58,6 +57,106 @@ const PIPELINE = [
   { label: "Generate", icon: Sparkles },
 ];
 
+function seededRandom(seed: number) {
+  let value = seed;
+  return () => {
+    value = (value * 1664525 + 1013904223) % 4294967296;
+    return value / 4294967296;
+  };
+}
+
+function shuffleSentences<T>(items: T[], seed = 42) {
+  const rand = seededRandom(seed);
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function tokenizeDemoSentences(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(/(?<=[.!?])\s+/g)
+    .map((sentence) =>
+      sentence
+        .replace(/[^\p{L}\p{N}'\-]+/gu, " ")
+        .split(/\s+/g)
+        .map((token) => token.trim())
+        .filter(Boolean)
+    )
+    .filter((sentence) => sentence.length > 0);
+}
+
+function buildNotebookStyleDemo(text: string): {
+  preprocessed: PreprocessResult;
+  split: DatasetSplit;
+} {
+  const startToken = DEFAULT_PREPROCESS_OPTIONS.startToken;
+  const endToken = DEFAULT_PREPROCESS_OPTIONS.endToken;
+  const unkToken = DEFAULT_PREPROCESS_OPTIONS.unkToken;
+  const sentences = shuffleSentences(tokenizeDemoSentences(text));
+  const trainEnd = Math.floor(sentences.length * 0.7);
+  const validationEnd = trainEnd + Math.floor(sentences.length * 0.1);
+  const trainSentences = sentences.slice(0, trainEnd);
+  const validationSentences = sentences.slice(trainEnd, validationEnd);
+  const testSentences = sentences.slice(validationEnd);
+
+  const trainFreq: Record<string, number> = {};
+  trainSentences.flat().forEach((token) => {
+    trainFreq[token] = (trainFreq[token] ?? 0) + 1;
+  });
+
+  const vocabularySet = new Set(
+    Object.entries(trainFreq)
+      .filter(([, count]) => count >= 2)
+      .map(([token]) => token)
+  );
+  vocabularySet.add(startToken);
+  vocabularySet.add(endToken);
+  vocabularySet.add(unkToken);
+
+  let unkReplacements = 0;
+  const prepare = (rows: string[][]) =>
+    rows.flatMap((sentence) => {
+      const mapped = sentence.map((token) => {
+        if (vocabularySet.has(token)) return token;
+        unkReplacements += 1;
+        return unkToken;
+      });
+      return [startToken, startToken, startToken, ...mapped, endToken];
+    });
+
+  const split = {
+    train: prepare(trainSentences),
+    validation: prepare(validationSentences),
+    test: prepare(testSentences),
+  };
+  const tokens = [...split.train, ...split.validation, ...split.test];
+  const freq: Record<string, number> = {};
+  tokens.forEach((token) => {
+    freq[token] = (freq[token] ?? 0) + 1;
+  });
+  const vocabulary = Object.keys(freq).sort((a, b) => freq[b] - freq[a]);
+  const uniqueBefore = new Set(sentences.flat()).size + 3;
+
+  return {
+    preprocessed: {
+      rawText: text,
+      tokens,
+      vocabulary,
+      freq,
+      uniqueBefore,
+      uniqueAfter: vocabulary.length,
+      unkReplacements,
+    },
+    split,
+  };
+}
+
 export default function FourGramHomePage() {
   const router = useRouter();
   const store = useExperiment();
@@ -77,12 +176,11 @@ export default function FourGramHomePage() {
     await sleep(80);
     const opts = { ...DEFAULT_PREPROCESS_OPTIONS, vocabSize: 1000 };
     store.setPreprocessOptions(opts);
-    const pre = preprocessText(corpus.text, opts);
+    const { preprocessed: pre, split } = buildNotebookStyleDemo(corpus.text);
     store.setPreprocessed(pre);
 
     setDemoStep("Splitting train / validation / test...");
     await sleep(80);
-    const split = splitDataset(pre.tokens, 0.7, 0.1, 0.2);
     store.setSplit(split);
 
     setDemoStep("Counting n-grams...");

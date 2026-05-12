@@ -46,13 +46,20 @@ export function buildAllCounts(
   const bigrams = createNGrams(tokens, 2);
   const trigrams = createNGrams(tokens, 3);
   const fourgrams = createNGrams(tokens, 4);
+  const observed = new Set(tokens);
+  const effectiveVocabulary = vocabulary.filter((token) => observed.has(token));
+
+  if (observed.has("<UNK>") && !effectiveVocabulary.includes("<UNK>")) {
+    effectiveVocabulary.push("<UNK>");
+  }
+
   return {
     unigrams,
     bigrams,
     trigrams,
     fourgrams,
     totalUnigrams: unigrams.totalNgrams,
-    vocabulary,
+    vocabulary: effectiveVocabulary.length > 0 ? effectiveVocabulary : vocabulary,
   };
 }
 

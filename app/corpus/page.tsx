@@ -66,18 +66,30 @@ export default function CorpusPage() {
 
   function extractParagraphTextFromHtml(html: string) {
     const doc = new DOMParser().parseFromString(html, "text/html");
-    doc.querySelectorAll("script, style, noscript, template").forEach((el) => {
-      el.remove();
-    });
+    doc
+      .querySelectorAll(
+        "script, style, noscript, template, sup, .reference, .mw-editsection, .noprint"
+      )
+      .forEach((el) => {
+        el.remove();
+      });
 
-    return Array.from(doc.querySelectorAll("p"))
+    const paragraphs = Array.from(doc.querySelectorAll("p"))
       .map((p) => p.textContent?.trim() ?? "")
       .filter(Boolean)
       .join(" ");
+
+    if (paragraphs.trim().length > 0) return paragraphs;
+
+    return doc.body?.textContent?.trim() ?? "";
   }
 
   function cleanWebsiteText(text: string) {
     return text
+      .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/^#+\s*/gm, " ")
+      .replace(/https?:\/\/\S+/g, " ")
       .replace(/\[[^\]]*\]/g, " ")
       .toLowerCase()
       .replace(/[^a-z0-9\s.]/g, " ")
@@ -92,6 +104,112 @@ export default function CorpusPage() {
     );
   }
 
+  function getWikipediaApiUrl(url: string) {
+    const parsed = new URL(url);
+    if (!parsed.hostname.endsWith(".wikipedia.org")) return null;
+    const match = parsed.pathname.match(/^\/wiki\/(.+)$/);
+    if (!match) return null;
+
+    const title = decodeURIComponent(match[1]).replace(/_/g, " ");
+    const apiUrl = new URL(`https://${parsed.hostname}/w/api.php`);
+    apiUrl.searchParams.set("action", "parse");
+    apiUrl.searchParams.set("page", title);
+    apiUrl.searchParams.set("prop", "text");
+    apiUrl.searchParams.set("format", "json");
+    apiUrl.searchParams.set("origin", "*");
+    return apiUrl.toString();
+  }
+
+  async function fetchWikipediaParagraphText(normalizedUrl: string) {
+    const apiUrl = getWikipediaApiUrl(normalizedUrl);
+    if (!apiUrl) return null;
+
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`Wikipedia extraction failed (${response.status}).`);
+    }
+
+    const data = (await response.json()) as {
+      parse?: { text?: { "*": string } };
+      error?: { info?: string };
+    };
+
+    if (data.error) {
+      throw new Error(data.error.info ?? "Wikipedia extraction failed.");
+    }
+
+    const html = data.parse?.text?.["*"] ?? "";
+    const text = extractParagraphTextFromHtml(html);
+    return text.trim() ? cleanWebsiteText(text) : null;
+  }
+
+  async function readWebsiteResponse(response: Response) {
+    const responseText = await response.text();
+    return isHtmlResponse(responseText, response.headers.get("content-type"))
+      ? extractParagraphTextFromHtml(responseText)
+      : responseText;
+  }
+
+  async function fetchReadableWebsiteText(normalizedUrl: string) {
+    const minimumReadableCharacters = 80;
+    let directError: Error | null = null;
+
+    try {
+      const wikipediaText = await fetchWikipediaParagraphText(normalizedUrl);
+      if (wikipediaText && wikipediaText.length >= minimumReadableCharacters) {
+        return wikipediaText;
+      }
+    } catch (err) {
+      directError =
+        err instanceof Error
+          ? err
+          : new Error("Wikipedia extraction failed.");
+    }
+
+    try {
+      const response = await fetch(normalizedUrl, {
+        headers: {
+          Accept: "text/html,text/plain;q=0.9,*/*;q=0.8",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Direct page fetch failed (${response.status}).`);
+      }
+
+      const text = cleanWebsiteText(await readWebsiteResponse(response));
+      if (text.length >= minimumReadableCharacters) {
+        return text;
+      }
+
+      directError = new Error("The page returned too little readable text.");
+    } catch (err) {
+      directError =
+        err instanceof Error
+          ? err
+          : new Error("Direct page fetch failed.");
+    }
+
+    const readerUrl = `https://r.jina.ai/${normalizedUrl}`;
+    const response = await fetch(readerUrl, {
+      headers: {
+        Accept: "text/plain",
+        "x-respond-with": "text",
+      },
+    });
+
+    if (!response.ok) {
+      throw directError ?? new Error(`Text extraction failed (${response.status}).`);
+    }
+
+    const text = cleanWebsiteText(await readWebsiteResponse(response));
+    if (text.length < minimumReadableCharacters) {
+      throw new Error("The page did not return enough readable text.");
+    }
+
+    return text;
+  }
+
   async function loadWebsiteText(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setWebsiteStatus("loading");
@@ -99,32 +217,7 @@ export default function CorpusPage() {
 
     try {
       const normalizedUrl = normalizeWebsiteUrl(websiteUrl);
-      let response: Response;
-
-      try {
-        response = await fetch(normalizedUrl);
-      } catch {
-        const readerUrl = `https://r.jina.ai/${normalizedUrl}`;
-        response = await fetch(readerUrl, {
-          headers: {
-            "x-respond-with": "text",
-          },
-        });
-      }
-
-      if (!response.ok) {
-        throw new Error(`Text extraction failed (${response.status}).`);
-      }
-
-      const rawText = await response.text();
-      const sourceText = isHtmlResponse(rawText, response.headers.get("content-type"))
-        ? extractParagraphTextFromHtml(rawText)
-        : rawText;
-      const text = cleanWebsiteText(sourceText);
-
-      if (text.length < 80) {
-        throw new Error("The page did not return enough readable text.");
-      }
+      const text = await fetchReadableWebsiteText(normalizedUrl);
 
       setRawText(text);
       setWebsiteUrl(normalizedUrl);
