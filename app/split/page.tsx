@@ -85,7 +85,7 @@ export default function SplitPage() {
         >
           <RotateCcw className="h-4 w-4" /> Reset
         </Button>
-        <Link href="/training">
+        <Link href="/4gram/training">
           <Button disabled={!split}>
             Next: Train <ArrowRight className="h-4 w-4" />
           </Button>
@@ -95,7 +95,7 @@ export default function SplitPage() {
       {noPreprocess && (
         <Alert variant="warn" className="mb-6">
           You need to preprocess the corpus before splitting it.{" "}
-          <Link href="/preprocessing" className="underline">Go to preprocessing.</Link>
+          <Link href="/4gram/preprocessing" className="underline">Go to preprocessing.</Link>
         </Alert>
       )}
 

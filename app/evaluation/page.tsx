@@ -130,7 +130,7 @@ export default function EvaluationPage() {
           <Play className="h-4 w-4" />
           {running ? "Computing…" : "Evaluate on test"}
         </Button>
-        <Link href="/generator">
+        <Link href="/4gram/generator">
           <Button variant="outline" disabled={!both}>
             Generate text <ArrowRight className="h-4 w-4" />
           </Button>
@@ -140,7 +140,7 @@ export default function EvaluationPage() {
       {noData && (
         <Alert variant="warn" className="mb-6">
           You need a split dataset before evaluation.{" "}
-          <Link href="/split" className="underline">Go to split.</Link>
+          <Link href="/4gram/split" className="underline">Go to split.</Link>
         </Alert>
       )}
 

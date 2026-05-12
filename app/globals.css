@@ -29,6 +29,19 @@ body {
   @apply bg-ink-950 text-ink-100;
 }
 
+/* Slightly stronger supporting text in light mode. */
+html:not(.dark) .text-ink-400 {
+  color: #747c91;
+}
+
+html:not(.dark) .text-ink-500 {
+  color: #586174;
+}
+
+html:not(.dark) .text-ink-600 {
+  color: #454d60;
+}
+
 /* Grid background pattern used on hero / landing surfaces */
 .bg-grid {
   background-image:
@@ -108,4 +121,53 @@ input[type="range"]::-moz-range-thumb {
 .card-lift:hover {
   transform: translateY(-2px);
   @apply shadow-soft;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 16mm 14mm;
+  }
+
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  body {
+    color: black !important;
+    font-size: 11pt;
+    line-height: 1.45;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  main,
+  section,
+  article,
+  div {
+    overflow: visible !important;
+  }
+
+  table {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  tr,
+  img,
+  pre,
+  blockquote {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
 }

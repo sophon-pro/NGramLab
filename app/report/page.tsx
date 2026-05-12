@@ -67,11 +67,7 @@ export default function ReportPage() {
   );
 
   const markdown = useMemo(() => reportToMarkdown(report), [report]);
-
-  const ready =
-    !!preprocessed &&
-    !!split &&
-    (!!lm1Result || !!lm2Result);
+  const ready = !!preprocessed && !!split && (!!lm1Result || !!lm2Result);
 
   function download(filename: string, content: string, mime: string) {
     const blob = new Blob([content], { type: mime });
@@ -118,16 +114,46 @@ export default function ReportPage() {
     window.print();
   }
 
+  const corpusStats = [
+    ["Characters", report.corpusSummary.characters],
+    ["Tokens", report.corpusSummary.words],
+    ["Sentences", report.corpusSummary.sentences],
+    ["Vocabulary", report.corpusSummary.vocabSize],
+  ] as const;
+
+  const preprocessingRows = [
+    ["Lowercase", String(preprocessOptions.lowercase)],
+    ["Remove extra spaces", String(preprocessOptions.removeExtraSpaces)],
+    ["Keep punctuation", String(preprocessOptions.keepPunctuation)],
+    ["Sentence boundaries", String(preprocessOptions.addSentenceBoundaries)],
+    [
+      "Vocabulary limit",
+      preprocessOptions.vocabSize === 0 ? "all" : String(preprocessOptions.vocabSize),
+    ],
+    [
+      "Tokens used",
+      `${preprocessOptions.startToken}, ${preprocessOptions.endToken}, ${preprocessOptions.unkToken}`,
+    ],
+  ] as const;
+
+  const splitRows = [
+    ["Train tokens", report.split.train],
+    ["Validation tokens", report.split.validation],
+    ["Test tokens", report.split.test],
+  ] as const;
+
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
-      <PageHeader
-        step={{ current: 8, total: 8 }}
-        title="Experiment Report"
-        description="A clean, copy-pasteable summary of every choice you made and every number that came out. Suitable for academic submission."
-      />
+    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 print:max-w-none print:p-0">
+      <div className="print:hidden">
+        <PageHeader
+          step={{ current: 8, total: 8 }}
+          title="Experiment Report"
+          description="A clean, copy-pasteable summary of every choice you made and every number that came out. Suitable for academic submission."
+        />
+      </div>
 
       {!ready && (
-        <Alert variant="warn" className="mb-6">
+        <Alert variant="warn" className="mb-6 print:hidden">
           <AlertTriangle className="h-4 w-4 inline mr-1 -mt-1" />
           The report is incomplete. Make sure you've preprocessed your corpus,
           split the dataset, and trained at least one model.
@@ -135,7 +161,7 @@ export default function ReportPage() {
       )}
 
       <FadeIn>
-        <Card className="mb-6">
+        <Card className="mb-6 print:hidden">
           <CardHeader>
             <CardTitle>Export</CardTitle>
             <CardDescription>
@@ -148,19 +174,11 @@ export default function ReportPage() {
                 <FileText className="h-4 w-4" />
                 Export Markdown
               </Button>
-              <Button
-                onClick={exportJSON}
-                variant="secondary"
-                disabled={!ready}
-              >
+              <Button onClick={exportJSON} variant="secondary" disabled={!ready}>
                 <FileJson className="h-4 w-4" />
                 Export JSON
               </Button>
-              <Button
-                onClick={copyReport}
-                variant="outline"
-                disabled={!ready}
-              >
+              <Button onClick={copyReport} variant="outline" disabled={!ready}>
                 {copied ? (
                   <>
                     <CheckCircle2 className="h-4 w-4" />
@@ -173,11 +191,7 @@ export default function ReportPage() {
                   </>
                 )}
               </Button>
-              <Button
-                onClick={printPage}
-                variant="outline"
-                disabled={!ready}
-              >
+              <Button onClick={printPage} variant="outline" disabled={!ready}>
                 <Download className="h-4 w-4" />
                 Print / Save PDF
               </Button>
@@ -189,204 +203,251 @@ export default function ReportPage() {
           </CardContent>
         </Card>
 
-        {/* RENDERED REPORT */}
-        <Card className="mb-8 print:shadow-none print:border-0">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>NGramLab — Experiment Report</CardTitle>
-              <Badge variant="accent">v1</Badge>
-            </div>
-            <CardDescription>
-              Generated {new Date(report.createdAt).toLocaleString()}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="prose prose-invert prose-sm max-w-none print:prose-base">
-              <h3>1. Corpus Summary</h3>
-              <ul>
-                <li>
-                  Characters:{" "}
-                  <strong>
-                    {report.corpusSummary.characters.toLocaleString()}
-                  </strong>
-                </li>
-                <li>
-                  Tokens:{" "}
-                  <strong>
-                    {report.corpusSummary.words.toLocaleString()}
-                  </strong>
-                </li>
-                <li>
-                  Sentences:{" "}
-                  <strong>
-                    {report.corpusSummary.sentences.toLocaleString()}
-                  </strong>
-                </li>
-                <li>
-                  Vocabulary size:{" "}
-                  <strong>
-                    {report.corpusSummary.vocabSize.toLocaleString()}
-                  </strong>
-                </li>
-              </ul>
+        <Card className="mb-8 overflow-hidden print:mb-0 print:rounded-none print:border-0 print:bg-white print:shadow-none">
+          <CardContent className="p-0">
+            <article className="bg-white text-ink-900 dark:bg-ink-900 dark:text-ink-100 print:bg-white print:text-black">
+              <header className="border-b border-ink-200 bg-ink-50 px-8 py-7 dark:border-ink-800 dark:bg-ink-950 print:border-black/20 print:bg-white print:px-0 print:pb-5 print:pt-0">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-700 print:text-black">
+                      NGramLab
+                    </p>
+                    <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight print:text-2xl">
+                      Experiment Report
+                    </h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-600 dark:text-ink-300 print:text-black/70">
+                      Interactive 4-Gram Language Model Demo. Generated{" "}
+                      {new Date(report.createdAt).toLocaleString()}.
+                    </p>
+                  </div>
+                  <Badge
+                    variant="accent"
+                    className="self-start print:border print:border-black/30 print:bg-white print:text-black"
+                  >
+                    v1
+                  </Badge>
+                </div>
+              </header>
 
-              <h3>2. Preprocessing</h3>
-              <ul>
-                <li>Lowercase: {String(preprocessOptions.lowercase)}</li>
-                <li>
-                  Remove extra spaces:{" "}
-                  {String(preprocessOptions.removeExtraSpaces)}
-                </li>
-                <li>
-                  Keep punctuation:{" "}
-                  {String(preprocessOptions.keepPunctuation)}
-                </li>
-                <li>
-                  Sentence boundary tokens:{" "}
-                  {String(preprocessOptions.addSentenceBoundaries)}
-                </li>
-                <li>
-                  Vocabulary limit:{" "}
-                  {preprocessOptions.vocabSize === 0
-                    ? "all"
-                    : preprocessOptions.vocabSize}
-                </li>
-                <li>
-                  Tokens used:{" "}
-                  <code>{preprocessOptions.startToken}</code>,{" "}
-                  <code>{preprocessOptions.endToken}</code>,{" "}
-                  <code>{preprocessOptions.unkToken}</code>
-                </li>
-              </ul>
-
-              <h3>3. Dataset Split</h3>
-              <ul>
-                <li>
-                  Train tokens:{" "}
-                  <strong>{report.split.train.toLocaleString()}</strong>
-                </li>
-                <li>
-                  Validation tokens:{" "}
-                  <strong>{report.split.validation.toLocaleString()}</strong>
-                </li>
-                <li>
-                  Test tokens:{" "}
-                  <strong>{report.split.test.toLocaleString()}</strong>
-                </li>
-              </ul>
-
-              <h3>4. LM1 — Backoff Language Model</h3>
-              <p>
-                LM1 is an unsmoothed 4-gram model that backs off to lower-order
-                models when the higher-order n-gram is unseen. The fallback
-                order is{" "}
-                <em>4-gram → trigram → bigram → unigram</em>. When all four are
-                unseen for a context-word pair, the probability collapses to a
-                tiny epsilon and perplexity may diverge.
-              </p>
-
-              <h3>5. LM2 — Linear Interpolation with Add-k Smoothing</h3>
-              <p>
-                LM2 combines all four orders linearly:{" "}
-                <code>
-                  P(wᵢ | h) = λ₁P₁(wᵢ) + λ₂P₂(wᵢ|h₂) + λ₃P₃(wᵢ|h₃) +
-                  λ₄P₄(wᵢ|h₄)
-                </code>{" "}
-                where each P uses add-k smoothing{" "}
-                <code>(c + k) / (N + k·V)</code>.
-              </p>
-              {bestHyperparameters && (
-                <>
-                  <p>
-                    <strong>Best hyperparameters</strong> (from validation
-                    sweep):
-                  </p>
-                  <ul>
-                    <li>
-                      k = <code>{bestHyperparameters.k}</code>
-                    </li>
-                    <li>
-                      λ₁ = {bestHyperparameters.lambdas.unigram.toFixed(2)} · λ₂
-                      = {bestHyperparameters.lambdas.bigram.toFixed(2)} · λ₃ ={" "}
-                      {bestHyperparameters.lambdas.trigram.toFixed(2)} · λ₄ ={" "}
-                      {bestHyperparameters.lambdas.fourgram.toFixed(2)}
-                    </li>
-                    <li>
-                      Validation perplexity:{" "}
-                      <strong>
-                        {bestHyperparameters.perplexity.toFixed(2)}
-                      </strong>
-                    </li>
-                  </ul>
-                </>
-              )}
-
-              <h3>6. Test-Set Perplexity</h3>
-              {report.modelResults.length === 0 ? (
-                <p>
-                  <em>No models evaluated yet.</em>
-                </p>
-              ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Model</th>
-                      <th>Method</th>
-                      <th>Smoothing</th>
-                      <th>Perplexity</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {report.modelResults.map((r) => (
-                      <tr key={r.name}>
-                        <td>{r.name}</td>
-                        <td>{r.method}</td>
-                        <td>{r.smoothing}</td>
-                        <td>
-                          <strong>
-                            {isFinite(r.perplexity)
-                              ? r.perplexity.toFixed(2)
-                              : "∞"}
-                          </strong>
-                        </td>
-                      </tr>
+              <div className="space-y-8 px-8 py-7 print:px-0 print:py-5">
+                <section className="break-inside-avoid">
+                  <h2 className="mb-3 border-b border-ink-200 pb-2 text-sm font-bold uppercase tracking-[0.16em] text-ink-700 dark:border-ink-800 dark:text-ink-300 print:border-black/20 print:text-black">
+                    1. Corpus Summary
+                  </h2>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 print:grid-cols-4">
+                    {corpusStats.map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="rounded-lg border border-ink-200 bg-ink-50 p-3 dark:border-ink-800 dark:bg-ink-950 print:rounded-none print:border-black/20 print:bg-white"
+                      >
+                        <div className="text-xs font-medium uppercase tracking-wide text-ink-500 print:text-black/60">
+                          {label}
+                        </div>
+                        <div className="mt-1 text-xl font-semibold print:text-lg">
+                          {value.toLocaleString()}
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              )}
+                  </div>
+                </section>
 
-              <h3>7. Generated Examples</h3>
-              {report.generatedExamples.length === 0 ? (
-                <p>
-                  <em>No generations recorded yet.</em>
-                </p>
-              ) : (
-                <ol>
-                  {report.generatedExamples.slice(0, 5).map((ex, i) => (
-                    <li key={i}>
-                      <em>{ex}</em>
-                    </li>
-                  ))}
-                </ol>
-              )}
+                <section className="grid gap-5 md:grid-cols-2 print:grid-cols-2">
+                  <div className="break-inside-avoid">
+                    <h2 className="mb-3 border-b border-ink-200 pb-2 text-sm font-bold uppercase tracking-[0.16em] text-ink-700 dark:border-ink-800 dark:text-ink-300 print:border-black/20 print:text-black">
+                      2. Preprocessing
+                    </h2>
+                    <table className="w-full border-collapse text-sm">
+                      <tbody>
+                        {preprocessingRows.map(([label, value]) => (
+                          <tr
+                            key={label}
+                            className="border-b border-ink-200/80 dark:border-ink-800 print:border-black/15"
+                          >
+                            <th className="py-2 pr-4 text-left font-medium text-ink-500 print:text-black/60">
+                              {label}
+                            </th>
+                            <td className="py-2 text-right font-medium">{value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-              <h3>8. Conclusion</h3>
-              <p>
-                On the held-out test set, the interpolation model (LM2) with
-                add-k smoothing produces a finite, well-defined perplexity even
-                when 4-grams in the test split are unseen in training, because
-                lower-order probabilities are always mixed in and zero counts
-                are smoothed. The unsmoothed backoff model (LM1) is simpler but
-                fragile: a single unseen 4-gram that also has zero counts at
-                all lower orders forces the probability toward zero and
-                perplexity toward infinity. For a small, in-domain corpus like
-                the ones bundled here, LM2 is the more reliable choice.
-              </p>
-            </div>
+                  <div className="break-inside-avoid">
+                    <h2 className="mb-3 border-b border-ink-200 pb-2 text-sm font-bold uppercase tracking-[0.16em] text-ink-700 dark:border-ink-800 dark:text-ink-300 print:border-black/20 print:text-black">
+                      3. Dataset Split
+                    </h2>
+                    <table className="w-full border-collapse text-sm">
+                      <tbody>
+                        {splitRows.map(([label, value]) => (
+                          <tr
+                            key={label}
+                            className="border-b border-ink-200/80 dark:border-ink-800 print:border-black/15"
+                          >
+                            <th className="py-2 pr-4 text-left font-medium text-ink-500 print:text-black/60">
+                              {label}
+                            </th>
+                            <td className="py-2 text-right font-semibold">
+                              {value.toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <section>
+                  <h2 className="mb-3 border-b border-ink-200 pb-2 text-sm font-bold uppercase tracking-[0.16em] text-ink-700 dark:border-ink-800 dark:text-ink-300 print:border-black/20 print:text-black">
+                    4. Model Design
+                  </h2>
+                  <div className="grid gap-4 md:grid-cols-2 print:grid-cols-2">
+                    <div className="break-inside-avoid rounded-lg border border-ink-200 p-4 dark:border-ink-800 print:rounded-none print:border-black/20">
+                      <h3 className="font-semibold">LM1: Backoff Language Model</h3>
+                      <p className="mt-2 text-sm leading-6 text-ink-700 dark:text-ink-300 print:text-black/80">
+                        LM1 is an unsmoothed 4-gram model that backs off to
+                        lower-order models when the higher-order n-gram is
+                        unseen. The fallback order is 4-gram to trigram to
+                        bigram to unigram.
+                      </p>
+                    </div>
+                    <div className="break-inside-avoid rounded-lg border border-ink-200 p-4 dark:border-ink-800 print:rounded-none print:border-black/20">
+                      <h3 className="font-semibold">LM2: Linear Interpolation</h3>
+                      <p className="mt-2 text-sm leading-6 text-ink-700 dark:text-ink-300 print:text-black/80">
+                        LM2 combines all four n-gram orders using add-k
+                        smoothing. The interpolation is P(w | h) = lambda1 P1
+                        + lambda2 P2 + lambda3 P3 + lambda4 P4.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {bestHyperparameters && (
+                  <section className="break-inside-avoid">
+                    <h2 className="mb-3 border-b border-ink-200 pb-2 text-sm font-bold uppercase tracking-[0.16em] text-ink-700 dark:border-ink-800 dark:text-ink-300 print:border-black/20 print:text-black">
+                      5. Best Hyperparameters
+                    </h2>
+                    <table className="w-full border-collapse text-sm">
+                      <tbody>
+                        <tr className="border-b border-ink-200 dark:border-ink-800 print:border-black/15">
+                          <th className="py-2 pr-4 text-left font-medium text-ink-500 print:text-black/60">
+                            k
+                          </th>
+                          <td className="py-2 font-semibold">{bestHyperparameters.k}</td>
+                        </tr>
+                        <tr className="border-b border-ink-200 dark:border-ink-800 print:border-black/15">
+                          <th className="py-2 pr-4 text-left font-medium text-ink-500 print:text-black/60">
+                            Lambdas
+                          </th>
+                          <td className="py-2">
+                            unigram {bestHyperparameters.lambdas.unigram.toFixed(2)},{" "}
+                            bigram {bestHyperparameters.lambdas.bigram.toFixed(2)},{" "}
+                            trigram {bestHyperparameters.lambdas.trigram.toFixed(2)},{" "}
+                            fourgram {bestHyperparameters.lambdas.fourgram.toFixed(2)}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-ink-200 dark:border-ink-800 print:border-black/15">
+                          <th className="py-2 pr-4 text-left font-medium text-ink-500 print:text-black/60">
+                            Validation perplexity
+                          </th>
+                          <td className="py-2 font-semibold">
+                            {bestHyperparameters.perplexity.toFixed(2)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </section>
+                )}
+
+                <section className="break-inside-avoid">
+                  <h2 className="mb-3 border-b border-ink-200 pb-2 text-sm font-bold uppercase tracking-[0.16em] text-ink-700 dark:border-ink-800 dark:text-ink-300 print:border-black/20 print:text-black">
+                    6. Test-Set Perplexity
+                  </h2>
+                  {report.modelResults.length === 0 ? (
+                    <p className="text-sm italic text-ink-500">
+                      No models evaluated yet.
+                    </p>
+                  ) : (
+                    <table className="w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="border-y border-ink-300 bg-ink-50 text-left dark:border-ink-800 dark:bg-ink-950 print:border-black/30 print:bg-white">
+                          <th className="px-3 py-2 font-semibold">Model</th>
+                          <th className="px-3 py-2 font-semibold">Method</th>
+                          <th className="px-3 py-2 font-semibold">Smoothing</th>
+                          <th className="px-3 py-2 text-right font-semibold">
+                            Perplexity
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {report.modelResults.map((r) => (
+                          <tr
+                            key={r.name}
+                            className="border-b border-ink-200 dark:border-ink-800 print:border-black/15"
+                          >
+                            <td className="px-3 py-2 font-medium">{r.name}</td>
+                            <td className="px-3 py-2">{r.method}</td>
+                            <td className="px-3 py-2">{r.smoothing}</td>
+                            <td className="px-3 py-2 text-right font-semibold">
+                              {isFinite(r.perplexity)
+                                ? r.perplexity.toFixed(2)
+                                : "infinity"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </section>
+
+                <section>
+                  <h2 className="mb-3 border-b border-ink-200 pb-2 text-sm font-bold uppercase tracking-[0.16em] text-ink-700 dark:border-ink-800 dark:text-ink-300 print:border-black/20 print:text-black">
+                    7. Generated Examples
+                  </h2>
+                  {report.generatedExamples.length === 0 ? (
+                    <p className="text-sm italic text-ink-500">
+                      No generations recorded yet.
+                    </p>
+                  ) : (
+                    <ol className="space-y-2">
+                      {report.generatedExamples.slice(0, 5).map((ex, i) => (
+                        <li
+                          key={i}
+                          className="break-inside-avoid rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm leading-6 dark:border-ink-800 dark:bg-ink-950 print:rounded-none print:border-black/15 print:bg-white"
+                        >
+                          <span className="mr-2 font-semibold text-ink-500 print:text-black/60">
+                            {i + 1}.
+                          </span>
+                          <span className="italic">{ex}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </section>
+
+                <section className="break-inside-avoid">
+                  <h2 className="mb-3 border-b border-ink-200 pb-2 text-sm font-bold uppercase tracking-[0.16em] text-ink-700 dark:border-ink-800 dark:text-ink-300 print:border-black/20 print:text-black">
+                    8. Conclusion
+                  </h2>
+                  <p className="rounded-lg border border-ink-200 bg-ink-50 p-4 text-sm leading-6 text-ink-800 dark:border-ink-800 dark:bg-ink-950 dark:text-ink-200 print:rounded-none print:border-black/20 print:bg-white print:text-black">
+                    On the held-out test set, the interpolation model (LM2)
+                    with add-k smoothing produces a finite, well-defined
+                    perplexity even when 4-grams in the test split are unseen
+                    in training, because lower-order probabilities are always
+                    mixed in and zero counts are smoothed. The unsmoothed
+                    backoff model (LM1) is simpler but fragile; a single
+                    unseen 4-gram that also has zero counts at all lower orders
+                    can force probability toward zero and perplexity toward
+                    infinity. For a small, in-domain corpus, LM2 is the more
+                    reliable choice.
+                  </p>
+                </section>
+              </div>
+            </article>
           </CardContent>
         </Card>
 
-        <Card className="mb-8">
+        <Card className="mb-8 print:hidden">
           <CardHeader>
             <CardTitle>Raw markdown</CardTitle>
             <CardDescription>
@@ -394,14 +455,14 @@ export default function ReportPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <pre className="rounded-lg border border-ink-800 bg-ink-950 p-4 text-xs text-ink-300 overflow-x-auto max-h-80">
+            <pre className="max-h-80 overflow-x-auto rounded-lg border border-ink-200 bg-ink-50 p-4 text-xs text-ink-700 dark:border-ink-800 dark:bg-ink-950 dark:text-ink-300">
               {markdown}
             </pre>
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
-          <Link href="/explain">
+        <div className="flex justify-end print:hidden">
+          <Link href="/4gram/explain">
             <Button variant="secondary">
               Read methodology explainer
               <ArrowRight className="h-4 w-4" />

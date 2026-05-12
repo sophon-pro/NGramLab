@@ -11,9 +11,16 @@ import { Navbar } from "./Navbar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isPublicPage =
+    pathname === "/" ||
+    pathname === "/about" ||
+    pathname === "/about/" ||
+    pathname === "/methods" ||
+    pathname === "/methods/" ||
+    pathname === "/methods/4gram" ||
+    pathname === "/methods/4gram/";
 
-  if (isHome) {
+  if (isPublicPage) {
     return (
       <>
         <Navbar />
@@ -24,12 +31,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden print:block print:h-auto print:overflow-visible">
       <Sidebar />
-      <div className="h-screen flex-1 min-w-0 overflow-y-auto">
-        <div className="flex min-h-full flex-col">
-          <main className="flex-1 pt-14 lg:pt-0">{children}</main>
-          <Footer className="mt-0 flex h-16 shrink-0 items-center py-0" />
+      <div className="h-screen flex-1 min-w-0 overflow-y-auto print:h-auto print:overflow-visible">
+        <div className="flex min-h-full flex-col print:block print:min-h-0">
+          <main className="flex-1 pt-14 lg:pt-0 print:block print:p-0">{children}</main>
+          <Footer className="mt-0 flex h-16 shrink-0 items-center py-0 print:hidden" />
         </div>
       </div>
     </div>

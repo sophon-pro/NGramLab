@@ -140,7 +140,7 @@ export default function TuningPage() {
           <Sparkles className="h-4 w-4" />
           {running ? "Running…" : "Run sweep"}
         </Button>
-        <Link href="/evaluation">
+        <Link href="/4gram/evaluation">
           <Button variant="outline" disabled={!bestHyperparameters}>
             Next: Evaluate <ArrowRight className="h-4 w-4" />
           </Button>
@@ -150,7 +150,7 @@ export default function TuningPage() {
       {noData && (
         <Alert variant="warn" className="mb-6">
           You need a training and validation split first.{" "}
-          <Link href="/split" className="underline">Split the corpus.</Link>
+          <Link href="/4gram/split" className="underline">Split the corpus.</Link>
         </Alert>
       )}
 

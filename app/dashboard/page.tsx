@@ -36,6 +36,15 @@ import {
 } from "recharts";
 
 const SPLIT_COLORS = ["#22d3ee", "#a78bfa", "#34d399"];
+const CHART_TOOLTIP_STYLE = {
+  background: "#0b1220",
+  border: "1px solid #1f2937",
+  borderRadius: 8,
+  color: "#e2e8f0",
+};
+const CHART_TOOLTIP_TEXT_STYLE = {
+  color: "#e2e8f0",
+};
 
 export default function DashboardPage() {
   const {
@@ -118,7 +127,7 @@ export default function DashboardPage() {
         <Alert variant="info" className="mb-6">
           <AlertTriangle className="h-4 w-4 inline mr-1 -mt-1" />
           The dashboard is empty until you load a corpus and run preprocessing.{" "}
-          <Link href="/corpus" className="underline">
+          <Link href="/4gram/corpus" className="underline">
             Start here →
           </Link>
         </Alert>
@@ -236,33 +245,69 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {bestHyperparameters ? (
-                <div className="text-xs font-mono text-ink-300 space-y-0.5">
-                  <div>
-                    k ={" "}
-                    <span className="text-accent-300">
-                      {bestHyperparameters.k}
-                    </span>
+                <>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        ["k", bestHyperparameters.k.toFixed(2), true],
+                        [
+                          "lambda 1",
+                          bestHyperparameters.lambdas.unigram.toFixed(2),
+                          false,
+                        ],
+                        [
+                          "lambda 2",
+                          bestHyperparameters.lambdas.bigram.toFixed(2),
+                          false,
+                        ],
+                        [
+                          "lambda 3",
+                          bestHyperparameters.lambdas.trigram.toFixed(2),
+                          false,
+                        ],
+                        [
+                          "lambda 4",
+                          bestHyperparameters.lambdas.fourgram.toFixed(2),
+                          false,
+                        ],
+                      ].map(([label, value, accent]) => (
+                        <div
+                          key={String(label)}
+                          className={
+                            accent
+                              ? "rounded-lg border border-accent-400/30 bg-accent-400/10 px-3 py-2"
+                              : "rounded-lg border border-ink-200/70 bg-ink-50 px-3 py-2 dark:border-ink-800 dark:bg-ink-950/40"
+                          }
+                        >
+                          <div className="text-[10px] uppercase tracking-wider text-ink-500 dark:text-ink-400">
+                            {label}
+                          </div>
+                          <div
+                            className={
+                              accent
+                                ? "mt-0.5 font-mono text-sm font-semibold text-accent-700 dark:text-accent-300"
+                                : "mt-0.5 font-mono text-sm font-semibold text-ink-800 dark:text-ink-100"
+                            }
+                          >
+                            {value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-violet-400/30 bg-violet-500/10 px-3 py-2.5">
+                      <span className="text-xs font-medium text-violet-800 dark:text-violet-200">
+                        Validation PP
+                      </span>
+                      <span className="font-mono text-base font-semibold text-violet-800 dark:text-violet-200">
+                        {bestHyperparameters.perplexity.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    λ₁ = {bestHyperparameters.lambdas.unigram.toFixed(2)}
-                  </div>
-                  <div>
-                    λ₂ = {bestHyperparameters.lambdas.bigram.toFixed(2)}
-                  </div>
-                  <div>
-                    λ₃ = {bestHyperparameters.lambdas.trigram.toFixed(2)}
-                  </div>
-                  <div>
-                    λ₄ = {bestHyperparameters.lambdas.fourgram.toFixed(2)}
-                  </div>
-                  <div className="mt-1 text-ink-500">
-                    val PP = {bestHyperparameters.perplexity.toFixed(2)}
-                  </div>
-                </div>
+                </>
               ) : (
                 <p className="text-sm text-ink-500">
                   Not yet tuned.{" "}
-                  <Link href="/tuning" className="underline">
+                  <Link href="/4gram/tuning" className="underline">
                     Run sweep →
                   </Link>
                 </p>
@@ -304,12 +349,9 @@ export default function DashboardPage() {
                       />
                       <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
                       <Tooltip
-                        contentStyle={{
-                          background: "#0b1220",
-                          border: "1px solid #1f2937",
-                          borderRadius: 8,
-                          color: "#e2e8f0",
-                        }}
+                        contentStyle={CHART_TOOLTIP_STYLE}
+                        labelStyle={CHART_TOOLTIP_TEXT_STYLE}
+                        itemStyle={CHART_TOOLTIP_TEXT_STYLE}
                       />
                       <Bar
                         dataKey="count"
@@ -343,8 +385,7 @@ export default function DashboardPage() {
                         cy="50%"
                         innerRadius={50}
                         outerRadius={90}
-                        stroke="#0b1220"
-                        strokeWidth={2}
+                        stroke="none"
                       >
                         {splitData.map((_, i) => (
                           <Cell
@@ -354,12 +395,9 @@ export default function DashboardPage() {
                         ))}
                       </Pie>
                       <Tooltip
-                        contentStyle={{
-                          background: "#0b1220",
-                          border: "1px solid #1f2937",
-                          borderRadius: 8,
-                          color: "#e2e8f0",
-                        }}
+                        contentStyle={CHART_TOOLTIP_STYLE}
+                        labelStyle={CHART_TOOLTIP_TEXT_STYLE}
+                        itemStyle={CHART_TOOLTIP_TEXT_STYLE}
                       />
                       <Legend wrapperStyle={{ color: "#94a3b8" }} />
                     </PieChart>
@@ -398,12 +436,9 @@ export default function DashboardPage() {
                       />
                       <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
                       <Tooltip
-                        contentStyle={{
-                          background: "#0b1220",
-                          border: "1px solid #1f2937",
-                          borderRadius: 8,
-                          color: "#e2e8f0",
-                        }}
+                        contentStyle={CHART_TOOLTIP_STYLE}
+                        labelStyle={CHART_TOOLTIP_TEXT_STYLE}
+                        itemStyle={CHART_TOOLTIP_TEXT_STYLE}
                         formatter={(v: number, _n, p: any) =>
                           p.payload.isInf ? "∞" : v.toFixed(2)
                         }
@@ -440,7 +475,7 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border border-ink-800 bg-ink-950 p-4 font-serif text-ink-200 leading-relaxed">
+              <div className="rounded-lg border border-ink-200 bg-ink-50 p-4 text-ink-800 leading-relaxed shadow-inner dark:border-ink-800 dark:bg-ink-950 dark:text-ink-200">
                 {generatedExamples[0]}
               </div>
             </CardContent>
@@ -450,14 +485,14 @@ export default function DashboardPage() {
         {trainedAt && (
           <p className="text-xs text-ink-500 mb-6">
             Models last trained:{" "}
-            <span className="text-ink-300">
+            <span className="text-ink-600 dark:text-ink-300">
               {new Date(trainedAt).toLocaleString()}
             </span>
           </p>
         )}
 
         <div className="flex justify-end">
-          <Link href="/report">
+          <Link href="/4gram/report">
             <Button>
               Export report
               <ArrowRight className="h-4 w-4" />

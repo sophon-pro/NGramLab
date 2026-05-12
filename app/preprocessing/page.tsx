@@ -60,7 +60,7 @@ export default function PreprocessingPage() {
         <Button variant="outline" onClick={runPreprocess} disabled={noCorpus}>
           <RefreshCw className="h-4 w-4" /> Run
         </Button>
-        <Link href="/split">
+        <Link href="/4gram/split">
           <Button disabled={!cached}>
             Next: Split <ArrowRight className="h-4 w-4" />
           </Button>
@@ -69,7 +69,7 @@ export default function PreprocessingPage() {
 
       {noCorpus && (
         <Alert variant="warn" className="mb-6">
-          No corpus loaded yet. <Link href="/corpus" className="underline">Pick one first.</Link>
+          No corpus loaded yet. <Link href="/4gram/corpus" className="underline">Pick one first.</Link>
         </Alert>
       )}
 

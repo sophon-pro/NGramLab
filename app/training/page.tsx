@@ -154,12 +154,12 @@ export default function TrainingPage() {
         description="Build the count tables and train both 4-gram language models."
         step={{ current: 4, total: 8 }}
       >
-        <Link href="/tuning">
+        <Link href="/4gram/tuning">
           <Button variant="outline">
             Tune LM2 <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
-        <Link href="/evaluation">
+        <Link href="/4gram/evaluation">
           <Button disabled={lm1Status !== "done" && lm2Status !== "done"}>
             Evaluate <ArrowRight className="h-4 w-4" />
           </Button>
@@ -169,7 +169,7 @@ export default function TrainingPage() {
       {noData && (
         <Alert variant="warn" className="mb-6">
           Need a preprocessed and split corpus first.{" "}
-          <Link href="/split" className="underline">Split it now.</Link>
+          <Link href="/4gram/split" className="underline">Split it now.</Link>
         </Alert>
       )}
 

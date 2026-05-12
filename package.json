@@ -1,8 +1,8 @@
 {
-  "name": "ngramlab",
+  "name": "nlplearninglab",
   "version": "1.0.0",
   "private": true,
-  "description": "Interactive 4-Gram Language Model and Text Generation Demo",
+  "description": "Browser-based NLP methods explorer with an interactive 4-gram language model demo",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

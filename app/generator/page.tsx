@@ -50,14 +50,12 @@ export default function GeneratorPage() {
     generatedExamples,
   } = useExperiment();
 
-  // Rebuild counts in memory if we lost them on reload.
   useEffect(() => {
     if (!counts && split) {
       setCounts(buildAllCounts(split.train, preprocessed?.vocabulary ?? []));
     }
   }, [counts, split, preprocessed, setCounts]);
 
-  // Local UI state
   const [model, setModel] = useState<ModelChoice>("lm2");
   const [seed, setSeed] = useState("the quick");
   const [maxWords, setMaxWords] = useState(50);
@@ -78,7 +76,7 @@ export default function GeneratorPage() {
   function runGeneration() {
     if (!ready || !counts) return;
     setRunning(true);
-    // Tiny delay so the spinner is visible — generation itself is fast.
+
     setTimeout(() => {
       const scorer =
         model === "lm1"
@@ -111,7 +109,7 @@ export default function GeneratorPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <PageHeader
         step={{ current: 7, total: 8 }}
         title="Text Generator"
@@ -121,7 +119,7 @@ export default function GeneratorPage() {
       {!ready && (
         <Alert variant="warn" className="mb-6">
           <strong>No trained model in memory.</strong> Visit the{" "}
-          <Link href="/training" className="underline">
+          <Link href="/4gram/training" className="underline">
             Training page
           </Link>{" "}
           to build the n-gram counts first.
@@ -129,46 +127,43 @@ export default function GeneratorPage() {
       )}
 
       <FadeIn>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* CONTROLS */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
+        <div className="mb-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <Card>
+            <CardHeader className="pb-4">
               <CardTitle>Controls</CardTitle>
               <CardDescription>Configure the generation run.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              {/* Model selector */}
               <div>
-                <label className="text-sm font-medium text-ink-200 mb-2 block">
+                <label className="mb-2 block text-sm font-medium text-ink-600 dark:text-ink-300">
                   Model
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setModel("lm1")}
-                    className={`rounded-lg border px-3 py-2 text-sm transition ${
+                    className={`min-h-14 rounded-lg border px-3 py-2 text-sm font-medium transition ${
                       model === "lm1"
-                        ? "border-accent-400 bg-accent-400/10 text-accent-200"
-                        : "border-ink-800 hover:border-ink-700 text-ink-300"
+                        ? "border-accent-400 bg-accent-400/10 text-accent-700 shadow-sm dark:text-accent-200"
+                        : "border-ink-200 text-ink-600 hover:border-ink-300 hover:bg-ink-50 dark:border-ink-800 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800/40"
                     }`}
                   >
-                    LM1 · Backoff
+                    LM1 Backoff
                   </button>
                   <button
                     onClick={() => setModel("lm2")}
-                    className={`rounded-lg border px-3 py-2 text-sm transition ${
+                    className={`min-h-14 rounded-lg border px-3 py-2 text-sm font-medium transition ${
                       model === "lm2"
-                        ? "border-violetx-400 bg-violetx-400/10 text-violetx-200"
-                        : "border-ink-800 hover:border-ink-700 text-ink-300"
+                        ? "border-violet-400 bg-violet-500/10 text-violet-700 shadow-sm dark:text-violet-200"
+                        : "border-ink-200 text-ink-600 hover:border-ink-300 hover:bg-ink-50 dark:border-ink-800 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800/40"
                     }`}
                   >
-                    LM2 · Interpolation
+                    LM2 Interpolation
                   </button>
                 </div>
               </div>
 
-              {/* Seed */}
               <div>
-                <label className="text-sm font-medium text-ink-200 mb-2 block">
+                <label className="mb-2 block text-sm font-medium text-ink-600 dark:text-ink-300">
                   Seed text
                 </label>
                 <input
@@ -176,18 +171,20 @@ export default function GeneratorPage() {
                   value={seed}
                   onChange={(e) => setSeed(e.target.value)}
                   placeholder="e.g. the model predicts"
-                  className="w-full rounded-lg border border-ink-800 bg-ink-950 px-3 py-2 text-sm text-ink-100 placeholder:text-ink-500 focus:border-accent-400 focus:outline-none"
+                  className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2.5 text-sm text-ink-900 shadow-sm placeholder:text-ink-400 focus:border-accent-400 focus:outline-none focus:ring-2 focus:ring-accent-400/20 dark:border-ink-800 dark:bg-ink-950 dark:text-ink-100 dark:placeholder:text-ink-500"
                 />
-                <p className="mt-1 text-xs text-ink-500">
+                <p className="mt-2 text-xs leading-relaxed text-ink-500 dark:text-ink-400">
                   The last 3 words form the 4-gram context. Start-tokens fill
                   the gap if the seed is shorter.
                 </p>
               </div>
 
-              {/* Length */}
               <div>
-                <label className="text-sm font-medium text-ink-200 mb-2 block">
-                  Length: <span className="text-accent-300">{maxWords}</span>{" "}
+                <label className="mb-2 block text-sm font-medium text-ink-600 dark:text-ink-300">
+                  Length:{" "}
+                  <span className="text-accent-600 dark:text-accent-300">
+                    {maxWords}
+                  </span>{" "}
                   words
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -195,10 +192,10 @@ export default function GeneratorPage() {
                     <button
                       key={n}
                       onClick={() => setMaxWords(n)}
-                      className={`rounded-md border px-2 py-1.5 text-sm transition ${
+                      className={`rounded-lg border px-2 py-2 text-sm font-medium transition ${
                         maxWords === n
-                          ? "border-accent-400 bg-accent-400/10 text-accent-200"
-                          : "border-ink-800 hover:border-ink-700 text-ink-300"
+                          ? "border-accent-400 bg-accent-400/10 text-accent-700 shadow-sm dark:text-accent-200"
+                          : "border-ink-200 text-ink-500 hover:border-ink-300 hover:bg-ink-50 dark:border-ink-800 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800/40"
                       }`}
                     >
                       {n}
@@ -207,11 +204,10 @@ export default function GeneratorPage() {
                 </div>
               </div>
 
-              {/* Temperature */}
               <div>
-                <label className="text-sm font-medium text-ink-200 mb-2 block">
+                <label className="mb-2 block text-sm font-medium text-ink-600 dark:text-ink-300">
                   Temperature:{" "}
-                  <span className="text-accent-300">
+                  <span className="text-accent-600 dark:text-accent-300">
                     {temperature.toFixed(2)}
                   </span>
                 </label>
@@ -222,34 +218,33 @@ export default function GeneratorPage() {
                   step={0.05}
                   value={temperature}
                   onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                  className="w-full"
+                  className="w-full accent-accent-400"
                 />
-                <div className="flex justify-between text-[10px] text-ink-500 mt-1">
-                  <span>0.2 · sharp</span>
-                  <span>1.0 · neutral</span>
-                  <span>1.5 · diverse</span>
+                <div className="mt-1 flex justify-between text-[11px] text-ink-500 dark:text-ink-400">
+                  <span>0.2 sharp</span>
+                  <span>1.0 neutral</span>
+                  <span>1.5 diverse</span>
                 </div>
               </div>
 
-              {/* Strategy */}
               <div>
-                <label className="text-sm font-medium text-ink-200 mb-2 block">
+                <label className="mb-2 block text-sm font-medium text-ink-600 dark:text-ink-300">
                   Sampling strategy
                 </label>
                 <div className="space-y-2">
                   {(
                     [
-                      ["greedy", "Greedy — always pick the most likely word"],
-                      ["weighted", "Weighted — sample proportional to probability"],
-                      ["top-k", "Top-K — sample only from the top K candidates"],
+                      ["greedy", "Greedy - always pick the most likely word"],
+                      ["weighted", "Weighted - sample proportional to probability"],
+                      ["top-k", "Top-K - sample only from the top K candidates"],
                     ] as [GenerationStrategy, string][]
                   ).map(([val, label]) => (
                     <label
                       key={val}
-                      className={`flex items-start gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer transition ${
+                      className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
                         strategy === val
-                          ? "border-accent-400 bg-accent-400/5"
-                          : "border-ink-800 hover:border-ink-700"
+                          ? "border-accent-400 bg-accent-400/10 shadow-sm"
+                          : "border-ink-200 hover:border-ink-300 hover:bg-ink-50 dark:border-ink-800 dark:hover:border-ink-700 dark:hover:bg-ink-800/40"
                       }`}
                     >
                       <input
@@ -260,27 +255,31 @@ export default function GeneratorPage() {
                         onChange={() => setStrategy(val)}
                         className="mt-1 accent-accent-400"
                       />
-                      <span className="text-ink-300">{label}</span>
+                      <span className="leading-relaxed text-ink-600 dark:text-ink-300">
+                        {label}
+                      </span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              {/* Top-K */}
               {strategy === "top-k" && (
                 <div>
-                  <label className="text-sm font-medium text-ink-200 mb-2 block">
-                    Top-K size: <span className="text-accent-300">{topK}</span>
+                  <label className="mb-2 block text-sm font-medium text-ink-600 dark:text-ink-300">
+                    Top-K size:{" "}
+                    <span className="text-accent-600 dark:text-accent-300">
+                      {topK}
+                    </span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[5, 10, 20].map((n) => (
                       <button
                         key={n}
                         onClick={() => setTopK(n)}
-                        className={`rounded-md border px-2 py-1.5 text-sm transition ${
+                        className={`rounded-lg border px-2 py-2 text-sm font-medium transition ${
                           topK === n
-                            ? "border-accent-400 bg-accent-400/10 text-accent-200"
-                            : "border-ink-800 hover:border-ink-700 text-ink-300"
+                            ? "border-accent-400 bg-accent-400/10 text-accent-700 shadow-sm dark:text-accent-200"
+                            : "border-ink-200 text-ink-500 hover:border-ink-300 hover:bg-ink-50 dark:border-ink-800 dark:text-ink-300 dark:hover:border-ink-700 dark:hover:bg-ink-800/40"
                         }`}
                       >
                         {n}
@@ -294,11 +293,12 @@ export default function GeneratorPage() {
                 onClick={runGeneration}
                 disabled={!ready || running || !seed.trim()}
                 className="w-full"
+                size="lg"
               >
                 {running ? (
                   <>
                     <Wand2 className="h-4 w-4 animate-pulse" />
-                    Generating…
+                    Generating...
                   </>
                 ) : (
                   <>
@@ -310,10 +310,9 @@ export default function GeneratorPage() {
             </CardContent>
           </Card>
 
-          {/* OUTPUT */}
-          <Card className="lg:col-span-2">
+          <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle>Generated text</CardTitle>
                   <CardDescription>
@@ -347,10 +346,10 @@ export default function GeneratorPage() {
             </CardHeader>
             <CardContent>
               <div
-                className={`rounded-xl border p-6 min-h-[140px] leading-relaxed font-serif text-lg ${
+                className={`min-h-[220px] rounded-lg border p-6 text-base leading-relaxed sm:text-lg ${
                   output
-                    ? "border-ink-800 bg-ink-950 text-ink-100"
-                    : "border-dashed border-ink-800 bg-ink-950/40 text-ink-500 italic"
+                    ? "border-ink-200 bg-ink-50 text-ink-900 shadow-inner dark:border-ink-800 dark:bg-ink-950 dark:text-ink-100"
+                    : "border-dashed border-ink-300 bg-ink-50 text-ink-500 italic dark:border-ink-800 dark:bg-ink-950/50 dark:text-ink-400"
                 }`}
               >
                 {output ||
@@ -358,26 +357,28 @@ export default function GeneratorPage() {
               </div>
 
               {output && (
-                <div className="mt-3 text-xs text-ink-500 flex flex-wrap gap-4">
+                <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-ink-500 dark:text-ink-400 sm:grid-cols-4">
                   <span>
                     Length:{" "}
-                    <span className="text-ink-300">
+                    <span className="font-medium text-ink-700 dark:text-ink-300">
                       {formatNumber(output.split(/\s+/).length)} words
                     </span>
                   </span>
                   <span>
                     Steps:{" "}
-                    <span className="text-ink-300">
+                    <span className="font-medium text-ink-700 dark:text-ink-300">
                       {formatNumber(lastGenerationSteps.length)}
                     </span>
                   </span>
                   <span>
                     Strategy:{" "}
-                    <span className="text-ink-300">{strategy}</span>
+                    <span className="font-medium text-ink-700 dark:text-ink-300">
+                      {strategy}
+                    </span>
                   </span>
                   <span>
                     Temperature:{" "}
-                    <span className="text-ink-300">
+                    <span className="font-medium text-ink-700 dark:text-ink-300">
                       {temperature.toFixed(2)}
                     </span>
                   </span>
@@ -387,7 +388,6 @@ export default function GeneratorPage() {
           </Card>
         </div>
 
-        {/* TRACE */}
         {lastGenerationSteps.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
@@ -398,9 +398,9 @@ export default function GeneratorPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto rounded-lg border border-ink-800">
+              <div className="overflow-x-auto rounded-lg border border-ink-200 dark:border-ink-800">
                 <table className="w-full text-sm">
-                  <thead className="bg-ink-900/60 text-left text-ink-400">
+                  <thead className="bg-ink-50 text-left text-ink-600 dark:bg-ink-950 dark:text-ink-300">
                     <tr>
                       <th className="px-3 py-2 font-medium">Step</th>
                       <th className="px-3 py-2 font-medium">Context</th>
@@ -410,20 +410,22 @@ export default function GeneratorPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-ink-200 dark:divide-ink-800">
                     {lastGenerationSteps.slice(0, 60).map((s) => (
                       <tr
                         key={s.step}
-                        className="border-t border-ink-800 hover:bg-ink-900/30"
+                        className="hover:bg-ink-50/80 dark:hover:bg-ink-800/30"
                       >
-                        <td className="px-3 py-2 text-ink-500">{s.step}</td>
-                        <td className="px-3 py-2 font-mono text-xs text-ink-300">
-                          {s.context || "—"}
+                        <td className="px-3 py-2 text-ink-500 dark:text-ink-400">
+                          {s.step}
                         </td>
-                        <td className="px-3 py-2 font-mono text-accent-300">
+                        <td className="px-3 py-2 font-mono text-xs text-ink-600 dark:text-ink-300">
+                          {s.context || "-"}
+                        </td>
+                        <td className="px-3 py-2 font-mono font-medium text-accent-700 dark:text-accent-300">
                           {s.selectedWord}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono text-ink-300">
+                        <td className="px-3 py-2 text-right font-mono text-ink-600 dark:text-ink-300">
                           {s.probability.toExponential(2)}
                         </td>
                       </tr>
@@ -432,7 +434,7 @@ export default function GeneratorPage() {
                 </table>
               </div>
               {lastGenerationSteps.length > 60 && (
-                <p className="mt-2 text-xs text-ink-500">
+                <p className="mt-2 text-xs text-ink-500 dark:text-ink-400">
                   Showing first 60 steps of {lastGenerationSteps.length}.
                 </p>
               )}
@@ -440,7 +442,6 @@ export default function GeneratorPage() {
           </Card>
         )}
 
-        {/* HISTORY */}
         {generatedExamples.length > 1 && (
           <Card className="mb-8">
             <CardHeader>
@@ -454,10 +455,10 @@ export default function GeneratorPage() {
                 {generatedExamples.slice(0, 5).map((ex, i) => (
                   <li
                     key={i}
-                    className="rounded-md border border-ink-800 bg-ink-950 p-3 text-sm font-serif text-ink-200 leading-relaxed"
+                    className="rounded-lg border border-ink-200 bg-ink-50 p-3 text-sm leading-relaxed text-ink-800 dark:border-ink-800 dark:bg-ink-950 dark:text-ink-200"
                   >
-                    <span className="mr-2 inline-block text-xs text-ink-500">
-                      #{i + 1}
+                    <span className="mr-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-xs font-medium text-ink-500 ring-1 ring-ink-200 dark:bg-ink-900 dark:text-ink-400 dark:ring-ink-800">
+                      {i + 1}
                     </span>
                     {ex}
                   </li>
@@ -476,7 +477,7 @@ export default function GeneratorPage() {
         </Alert>
 
         <div className="flex justify-end">
-          <Link href="/report">
+          <Link href="/4gram/report">
             <Button>
               Continue to Report
               <ArrowRight className="h-4 w-4" />

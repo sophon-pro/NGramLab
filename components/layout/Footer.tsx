@@ -12,10 +12,10 @@ export function Footer({ className }: { className?: string }) {
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs text-ink-500 dark:text-ink-400">
-          NGramLab · Mini Project · Text Generation · v1.0
+          NLPLearningLab · Browser NLP Methods · v1.0
         </p>
         <a
-          href="https://github.com"
+          href="https://github.com/sophon-pro/NLPLearningLab"
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400 hover:text-accent-600 dark:hover:text-accent-300 transition-colors"

@@ -5,9 +5,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 
 export const metadata: Metadata = {
-  title: "NGramLab — Interactive 4-Gram Language Model Demo",
+  title: "NLPLearningLab - Interactive NLP Methods Explorer",
   description:
-    "Train, tune, evaluate, and generate text with two 4-gram language models — backoff and interpolation with add-k smoothing. M-DAS Mini Project 1.",
+    "Explore NLP methods in the browser, including an interactive 4-gram language model demo with backoff and interpolation with add-k smoothing.",
   keywords: [
     "NLP",
     "n-gram",

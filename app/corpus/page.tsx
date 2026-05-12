@@ -8,6 +8,8 @@ import {
   Upload,
   ClipboardPaste,
   Sparkles,
+  Globe2,
+  Loader2,
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
@@ -30,12 +32,15 @@ import { SAMPLE_CORPORA } from "@/lib/sample-corpus";
 import { rawCorpusStats } from "@/lib/nlp/preprocess";
 import { cn, formatNumber } from "@/lib/utils";
 
-type Mode = "sample" | "paste" | "upload";
+type Mode = "sample" | "paste" | "upload" | "website";
 
 export default function CorpusPage() {
   const { rawText, setRawText } = useExperiment();
   const [mode, setMode] = useState<Mode>("sample");
   const [selectedSample, setSelectedSample] = useState<string>(SAMPLE_CORPORA[0].id);
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [websiteStatus, setWebsiteStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [websiteMessage, setWebsiteMessage] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -68,6 +73,95 @@ export default function CorpusPage() {
     reader.readAsText(f);
   }
 
+  function normalizeWebsiteUrl(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) throw new Error("Enter a website URL first.");
+    const withProtocol = /^https?:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
+    const parsed = new URL(withProtocol);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      throw new Error("Only http and https URLs are supported.");
+    }
+    return parsed.toString();
+  }
+
+  function extractParagraphTextFromHtml(html: string) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    doc.querySelectorAll("script, style, noscript, template").forEach((el) => {
+      el.remove();
+    });
+
+    return Array.from(doc.querySelectorAll("p"))
+      .map((p) => p.textContent?.trim() ?? "")
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  function cleanWebsiteText(text: string) {
+    return text
+      .replace(/\[[^\]]*\]/g, " ")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s.]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function isHtmlResponse(text: string, contentType: string | null) {
+    return (
+      contentType?.toLowerCase().includes("text/html") ||
+      /^\s*(?:<!doctype\s+html|<html[\s>]|<body[\s>]|<p[\s>])/i.test(text)
+    );
+  }
+
+  async function loadWebsiteText(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setWebsiteStatus("loading");
+    setWebsiteMessage("");
+
+    try {
+      const normalizedUrl = normalizeWebsiteUrl(websiteUrl);
+      let response: Response;
+
+      try {
+        response = await fetch(normalizedUrl);
+      } catch {
+        const readerUrl = `https://r.jina.ai/${normalizedUrl}`;
+        response = await fetch(readerUrl, {
+          headers: {
+            "x-respond-with": "text",
+          },
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error(`Text extraction failed (${response.status}).`);
+      }
+
+      const rawText = await response.text();
+      const sourceText = isHtmlResponse(rawText, response.headers.get("content-type"))
+        ? extractParagraphTextFromHtml(rawText)
+        : rawText;
+      const text = cleanWebsiteText(sourceText);
+
+      if (text.length < 80) {
+        throw new Error("The page did not return enough readable text.");
+      }
+
+      setRawText(text);
+      setWebsiteUrl(normalizedUrl);
+      setWebsiteStatus("success");
+      setWebsiteMessage(`Extracted ${formatNumber(text.length)} characters from the page.`);
+    } catch (err) {
+      setWebsiteStatus("error");
+      setWebsiteMessage(
+        err instanceof Error
+          ? err.message
+          : "Unable to extract text from that website."
+      );
+    }
+  }
+
   // Validation flags
   const tooShort = stats.words < 100;
   const tooFewVocab = stats.uniqueWords < 30;
@@ -78,10 +172,10 @@ export default function CorpusPage() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <PageHeader
         title="Corpus"
-        description="Pick a sample, paste your own text, or upload a .txt file. The whole pipeline runs against whatever you load here."
+        description="Pick a sample, paste text, upload a .txt file, or extract readable text from a website URL."
         step={{ current: 1, total: 8 }}
       >
-        <Link href="/preprocessing">
+        <Link href="/4gram/preprocessing">
           <Button>
             Next: Preprocess <ArrowRight className="h-4 w-4" />
           </Button>
@@ -95,15 +189,16 @@ export default function CorpusPage() {
             <CardHeader>
               <CardTitle>Choose a source</CardTitle>
               <CardDescription>
-                Three ways in. Switching tabs preserves the underlying text.
+                Switching tabs preserves the underlying text.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                 {[
                   { id: "sample", label: "Sample", icon: Sparkles },
                   { id: "paste", label: "Paste", icon: ClipboardPaste },
                   { id: "upload", label: "Upload", icon: Upload },
+                  { id: "website", label: "Website", icon: Globe2 },
                 ].map((t) => {
                   const Icon = t.icon;
                   const active = mode === t.id;
@@ -189,6 +284,69 @@ export default function CorpusPage() {
                   />
                 </div>
               )}
+
+              {mode === "website" && (
+                <div className="space-y-3">
+                  <form onSubmit={loadWebsiteText} className="space-y-3">
+                    <div>
+                      <label
+                        htmlFor="website-url"
+                        className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-ink-500 dark:text-ink-400"
+                      >
+                        Website URL
+                      </label>
+                      <input
+                        id="website-url"
+                        type="text"
+                        inputMode="url"
+                        value={websiteUrl}
+                        onChange={(e) => {
+                          setWebsiteUrl(e.target.value);
+                          setWebsiteStatus("idle");
+                          setWebsiteMessage("");
+                        }}
+                        placeholder="https://example.com/article"
+                        className="w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-accent-400 dark:border-ink-800 dark:bg-ink-950 dark:text-ink-100"
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        type="submit"
+                        disabled={websiteStatus === "loading"}
+                      >
+                        {websiteStatus === "loading" ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Globe2 className="h-4 w-4" />
+                        )}
+                        Extract text
+                      </Button>
+                      <span className="text-xs text-ink-500 dark:text-ink-400">
+                        Best for article-style pages and documentation.
+                      </span>
+                    </div>
+                  </form>
+
+                  {websiteStatus === "success" && (
+                    <Alert variant="success">
+                      <CheckCircle2 className="inline h-4 w-4 mr-1" />
+                      {websiteMessage}
+                    </Alert>
+                  )}
+
+                  {websiteStatus === "error" && (
+                    <Alert variant="danger">
+                      <AlertTriangle className="inline h-4 w-4 mr-1" />
+                      {websiteMessage}
+                    </Alert>
+                  )}
+
+                  <p className="text-xs text-ink-500 dark:text-ink-400">
+                    Website extraction sends the URL to Jina Reader and stores
+                    only the extracted text in this browser.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -261,7 +419,7 @@ export default function CorpusPage() {
               </Alert>
             )}
             <Badge variant="default" className="w-full justify-center">
-              <FileText className="h-3 w-3" /> Stored locally · never uploaded
+              <FileText className="h-3 w-3" /> Corpus text stored locally
             </Badge>
           </div>
         </FadeIn>

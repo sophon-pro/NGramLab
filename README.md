@@ -1,254 +1,161 @@
-# NGramLab
+# NLPLearningLab
 
-**Interactive 4-Gram Language Model and Text Generation Demo**
+Browser-based NLP learning site with a method catalog and an interactive 4-gram
+language model demo.
 
-NGramLab is a fully browser-based web app that demonstrates two classical 4-gram
-language models — **backoff** and **linear interpolation with add-k smoothing** —
-end-to-end, from raw text all the way to perplexity evaluation and live text
-generation. Built as M-DAS Mini Project 1 (Text Generation).
+Live site:
 
-Everything runs client-side in TypeScript: there is no Python backend, no API
-call, no server. That means it deploys for free to GitHub Pages, Vercel,
-Netlify, or any static host.
+https://sophon-pro.github.io/NLPLearningLab/
 
----
+Repository:
 
-## ✨ Features
+https://github.com/sophon-pro/NLPLearningLab
 
-- **Corpus input** — paste text, upload a `.txt` file, or choose one of four
-  bundled sample corpora (Wikipedia-style, news, literature, data-science).
-- **Preprocessing controls** — lowercase, whitespace collapse, punctuation
-  policy, sentence boundary tokens `<s>` / `</s>`, vocabulary cap with `<UNK>`
-  substitution, and live token-stream visualization.
-- **Dataset split** — interactive train / validation / test sliders with a live
-  pie chart and per-split previews.
-- **N-gram training** — counts for unigrams, bigrams, trigrams and 4-grams with
-  searchable top-N tables.
-- **LM1: Backoff** — unsmoothed 4-gram → trigram → bigram → unigram fallback.
-- **LM2: Interpolation + Add-k** — λ-weighted mix of all four orders, each term
-  using add-k smoothing.
-- **Hyperparameter tuning** — automated 20-config sweep (4 λ presets × 5 k
-  values) on the validation set with a sortable result table and best-config
-  badge.
-- **Evaluation** — test-set perplexity for both models, side-by-side bar chart,
-  and a plain-language interpretation of why one wins.
-- **Text generator** — greedy, weighted, and top-K sampling with temperature
-  control plus a full step-by-step generation trace.
-- **Dashboard** — summary stats, top tokens, split, and perplexity charts.
-- **Auto report** — generates a clean academic markdown report. Export as `.md`,
-  `.json`, copy to clipboard, or print as PDF.
-- **Methodology explainer** — every concept used in the pipeline, in plain
-  English, with formulas.
-- **State persistence** — your experiment survives page navigation and refresh
-  via `localStorage`.
+## Overview
 
----
+NLPLearningLab is a static Next.js app for learning natural language processing
+methods through concise explanations and interactive browser demos. The main site
+introduces a catalog of NLP methods, while the current completed demo,
+NGramLab, focuses on classical 4-gram language modeling.
 
-## 🧠 NLP Methodology
+The 4-gram demo runs fully in the browser. It lets users load text, preprocess
+tokens, split data, train two language models, tune smoothing settings, evaluate
+perplexity, generate text, and export a report.
 
-### LM1 — Backoff 4-gram
+## Current Demo
 
-For a 4-gram context `wᵢ₋₃ wᵢ₋₂ wᵢ₋₁ → wᵢ`, compute:
+NGramLab compares two 4-gram language models:
 
-```
-P(wᵢ | wᵢ₋₃ wᵢ₋₂ wᵢ₋₁)
-= 4-gram MLE         if Count(wᵢ₋₃ wᵢ₋₂ wᵢ₋₁) > 0
-  trigram MLE        else if Count(wᵢ₋₂ wᵢ₋₁) > 0
-  bigram MLE         else if Count(wᵢ₋₁) > 0
-  unigram MLE        else
-  ε (1e-10)          if everything is unseen
-```
+- LM1 Backoff: falls back from 4-gram to trigram, bigram, and unigram counts.
+- LM2 Interpolation + Add-k: mixes all n-gram orders with add-k smoothing.
 
-No smoothing. Simple. Can produce ∞ perplexity if an unseen 4-gram has unseen
-shorter contexts too.
+The demo is designed for transparent learning rather than production NLP. Users
+can inspect corpus size, token counts, vocabulary size, n-gram frequencies,
+smoothing settings, perplexity, and generation traces.
 
-### LM2 — Linear Interpolation with Add-k
+## Features
 
-Mix all four orders with weights that sum to 1, smoothing each term:
+- Main NLPLearningLab landing page and About Project page
+- NLP Method Catalog with 12 method cards
+- In-page methodology preview modal for available demos
+- Disabled Learn More actions for coming-soon methods
+- Direct Start Demo flow into the namespaced `/4gram/corpus/` workflow
+- Corpus input by paste, file upload, sample corpus, or website text extraction
+- Preprocessing controls for lowercasing, punctuation, sentence boundaries, and vocabulary cap
+- Train / validation / test split controls
+- N-gram count tables for unigram through 4-gram orders
+- Hyperparameter tuning for interpolation weights and add-k smoothing
+- Perplexity evaluation for both models
+- Text generation with greedy, weighted, and top-k sampling
+- Academic report export as Markdown or JSON
+- Client-side state persistence with localStorage
 
-```
-P(wᵢ | h) = λ₁·P̂₁(wᵢ) + λ₂·P̂₂(wᵢ|h₂) + λ₃·P̂₃(wᵢ|h₃) + λ₄·P̂₄(wᵢ|h₄)
+## Tech Stack
 
-where  P̂_n(w | h) = (Count(h, w) + k) / (Count(h) + k · |V|)
-```
+- Next.js 14 App Router
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Recharts
+- Lucide React
+- Zustand
 
-Default values: `λ = [0.05, 0.15, 0.30, 0.50]`, `k = 0.1`. The Tuning page
-sweeps `k ∈ {0.01, 0.05, 0.1, 0.5, 1.0}` over four λ presets and picks the
-configuration with the lowest validation perplexity.
+All NLP logic is implemented in TypeScript under `lib/nlp/`. There is no Python
+backend, API key, database, or server dependency.
 
-### Perplexity
-
-```
-PP(W) = exp( − (1 / N) · Σᵢ log P(wᵢ | context) )
-```
-
-Accumulated in log-space with a floor of `log(1e-22) ≈ −50` to keep things
-numerically sane.
-
----
-
-## 🛠 Tech stack
-
-- **Next.js 14** (App Router)
-- **TypeScript**
-- **Tailwind CSS** with a custom palette
-- **Framer Motion** for fade-ins
-- **Recharts** for all charts
-- **Lucide React** for icons
-- **Zustand** (with `persist`) for state
-
-All NLP logic is in plain TypeScript under `lib/nlp/` — zero external NLP
-dependencies.
-
----
-
-## 🚀 Run locally
+## Run Locally
 
 Requires Node.js 18.17 or later.
 
 ```bash
-# 1. install
 npm install
-
-# 2. dev server
 npm run dev
-# → open http://localhost:3000
-
-# 3. production build
-npm run build
-npm run start
 ```
 
----
+Open:
 
-## ☁️ Deploy
-
-### Option 1 — Vercel (recommended, zero-config)
-
-1. Push this repo to GitHub.
-2. Go to [vercel.com](https://vercel.com) → "Add New Project" → import the repo.
-3. Accept defaults. Vercel detects Next.js automatically.
-4. Done — every push deploys.
-
-### Option 2 — GitHub Pages (static export)
-
-Open `next.config.js` and uncomment the three lines marked for GitHub Pages:
-
-```js
-// output: "export",
-// basePath: "/ngramlab",
-// images: { unoptimized: true },
+```text
+http://localhost:3000
 ```
 
-Then:
+To test the production static export:
 
 ```bash
 npm run build
-# produces /out — push the contents to the gh-pages branch
 ```
 
-Note: a few Next.js features (Image optimization, on-demand revalidation) are
-unavailable under `output: "export"`, but NGramLab doesn't use them.
+The exported site is written to `out/`.
 
-### Option 3 — Netlify, Cloudflare Pages, etc.
+## GitHub Pages Configuration
 
-Build command `npm run build`, publish directory `.next` (or `out/` if you
-enabled static export).
+This repo is configured for GitHub Pages at:
 
----
-
-## 📁 Project structure
-
-```
-ngramlab/
-├── app/                       # Next.js App Router pages
-│   ├── page.tsx               # Home
-│   ├── corpus/                # 1. Corpus input
-│   ├── preprocessing/         # 2. Tokenization & vocab
-│   ├── split/                 # 3. Train/val/test
-│   ├── training/              # 4. N-gram counts + train both models
-│   ├── tuning/                # 5. λ / k sweep (LM2)
-│   ├── evaluation/            # 6. Test-set perplexity comparison
-│   ├── generator/             # 7. Interactive text generation
-│   ├── dashboard/             #    Summary view
-│   ├── report/                # 8. Auto-generated markdown report
-│   └── explain/               #    Methodology explainer
-│
-├── components/
-│   ├── layout/                # Navbar, Footer, ThemeToggle, ThemeScript
-│   └── ui/                    # Card, Button, Badge, Alert, Stat, FadeIn…
-│
-├── lib/
-│   ├── nlp/
-│   │   ├── preprocess.ts      # Tokenization, sentence boundaries, UNK
-│   │   ├── split.ts           # Dataset partitioning
-│   │   ├── ngrams.ts          # Unigram → 4-gram counters + context counts
-│   │   ├── smoothing.ts       # Add-k
-│   │   ├── backoff.ts         # LM1 probability
-│   │   ├── interpolation.ts   # LM2 probability + λ helpers
-│   │   ├── perplexity.ts      # Log-space PP for both models
-│   │   └── generator.ts       # Greedy / weighted / top-K sampling
-│   ├── store/
-│   │   └── experiment.ts      # Zustand store with localStorage persist
-│   ├── sample-corpus.ts       # 4 bundled corpora
-│   ├── report.ts              # buildReport + markdown serializer
-│   └── utils.ts
-│
-├── types/
-│   └── nlp.ts                 # Shared TypeScript types
-│
-├── tailwind.config.ts
-├── next.config.js
-├── tsconfig.json
-└── package.json
+```text
+https://sophon-pro.github.io/NLPLearningLab/
 ```
 
----
+Important settings:
 
-## 🧭 How to use
+```js
+// next.config.js
+output: "export"
+basePath: "/NLPLearningLab"
+images: { unoptimized: true }
+trailingSlash: true
+```
 
-The intended flow is left-to-right through the navigation:
+The included workflow at `.github/workflows/deploy.yml` builds the static export
+and deploys the `out/` directory with GitHub Pages.
 
-1. **Corpus** — pick or paste your text.
-2. **Preprocess** — tokenize, set vocabulary size.
-3. **Split** — choose train / validation / test ratios.
-4. **Train** — count n-grams, train LM1 and LM2.
-5. **Tune** — sweep λ and k on the validation set, apply the winner.
-6. **Evaluate** — compare both models on the held-out test set.
-7. **Generate** — produce text with either model.
-8. **Report** — export a markdown or JSON summary.
+After pushing to `main`, make sure the repository's Pages settings use:
 
-Use the **Dashboard** as a live overview at any time, and the **Explain** page
-to refresh on the underlying concepts before presenting.
+- Source: GitHub Actions
+- Branch: not required when using the workflow
 
----
+## Project Structure
 
-## ⚠️ Known limitations
+```text
+app/
+  about/              Main-site About Project page
+  methods/            NLP method catalog and 4-gram intro page
+  4gram/              Public NGramLab workflow routes
+  corpus/             Workflow step 1
+  preprocessing/      Workflow step 2
+  split/              Workflow step 3
+  training/           Workflow step 4
+  tuning/             Workflow step 5
+  evaluation/         Workflow step 6
+  generator/          Workflow step 7
+  report/             Workflow step 8
+  explain/            NGramLab methodology page
 
-- The corpus must fit in memory (browser tab). Tested comfortably up to ~50k
-  tokens; very large texts will slow down generation because every step scores
-  the full vocabulary.
-- Text generation is O(|V|) per step. Tighten the vocabulary cap or use Top-K
-  sampling to speed it up.
-- Tokenization is intentionally simple (Unicode word boundaries). No
-  subword/BPE.
-- LM1 has no smoothing — that's the pedagogical point, but it means perplexity
-  may legitimately be `∞` on a small corpus.
+components/
+  layout/             Navbar, sidebar, footer, shell, theme controls
+  methods/            Method catalog, filters, cards, comparison, learning path
+  ui/                 Shared UI primitives
 
----
+data/
+  methods.ts          Method catalog data
 
-## 🔮 Future improvements
+lib/
+  nlp/                Tokenization, counts, smoothing, perplexity, generation
+  store/              Zustand experiment state
+  report.ts           Report builder and Markdown serializer
+  sample-corpus.ts    Bundled sample corpora
 
-- Support for larger corpora via streaming counts.
-- BPE / WordPiece tokenization.
-- Side-by-side comparison with a small RNN or Transformer.
-- Sentence-level perplexity breakdowns.
-- Word cloud and Markov-chain transition visualisation.
-- Save/load trained models as `.json`.
-- Multi-language support (the regex tokenizer already handles Unicode).
+types/
+  nlp.ts              Shared NLP types
+```
 
----
+## Scripts
 
-## 📜 License
+```bash
+npm run dev      # start local dev server
+npm run build    # create static export in out/
+npm run start    # start Next production server
+npm run lint     # run Next lint, if available in the local Next setup
+```
 
-MIT.
+## License
+
+MIT

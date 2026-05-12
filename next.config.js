@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'export',
-  basePath: '/NGramLab',
+  basePath: '/NLPLearningLab',
   images: { unoptimized: true },
   trailingSlash: true,
 };

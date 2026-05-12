@@ -6,12 +6,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
-import logoMark from "@/NGram.png";
+import logoMark from "@/NLPLearningLab.png";
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/explain", label: "Methodology" },
-  { href: "#about-project", label: "About Project" },
+  { href: "/about", label: "About Project" },
 ];
 
 export function Navbar() {
@@ -32,7 +30,7 @@ export function Navbar() {
             />
             <div className="flex flex-col gap-0.5 leading-none">
               <span className="font-display text-lg font-bold tracking-tight">
-                NGramLab
+                NLPLearningLab
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-500 dark:text-ink-400">
                 Digital Data Academy

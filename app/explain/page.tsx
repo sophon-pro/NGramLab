@@ -27,15 +27,14 @@ import {
 
 export default function ExplainPage() {
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10">
+    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <PageHeader
-        title="How NGramLab works"
+        title="How NGramLab Works"
         description="Each concept used in the pipeline, explained without jargon. Useful before your presentation."
       />
 
       <FadeIn>
-        <div className="grid grid-cols-1 gap-6">
-          {/* CORPUS */}
+        <div className="grid grid-cols-1 gap-5">
           <Concept
             icon={<BookOpen className="h-5 w-5" />}
             label="01"
@@ -43,20 +42,17 @@ export default function ExplainPage() {
             tag="Foundation"
           >
             <p>
-              A <strong>corpus</strong> is just a body of text — newspaper
-              articles, a novel, Wikipedia pages, tweets, anything written. The
+              A <strong>corpus</strong> is a body of text: newspaper articles,
+              a novel, Wikipedia pages, tweets, or any other written source. The
               model learns its statistics: which words appear, and which words
-              tend to follow which other words. A bigger and more in-domain
-              corpus generally means better predictions.
+              tend to follow which other words.
             </p>
-            <p className="text-ink-400">
-              In NGramLab you can paste your own text, upload a{" "}
-              <code>.txt</code> file, or pick one of four bundled samples
-              (Wikipedia-style, news, literature, data-science).
+            <p>
+              In NGramLab you can paste your own text, upload a <code>.txt</code>{" "}
+              file, extract text from a website, or pick a bundled sample.
             </p>
           </Concept>
 
-          {/* TOKENIZATION */}
           <Concept
             icon={<Type className="h-5 w-5" />}
             label="02"
@@ -64,26 +60,17 @@ export default function ExplainPage() {
             tag="Preprocessing"
           >
             <p>
-              Computers don't understand "sentences" — they need a list of
-              discrete units called <strong>tokens</strong>. Tokenization is
-              the step that turns a raw string into that list.
+              Computers do not understand sentences directly. Tokenization turns
+              raw text into a list of discrete units called <strong>tokens</strong>.
             </p>
-            <Example
-              before='"I love NLP."'
-              after='["i", "love", "nlp"]'
-            />
-            <p className="text-ink-400">
-              NGramLab additionally inserts sentence-boundary tokens{" "}
-              <code className="text-violetx-300">&lt;s&gt;</code> and{" "}
-              <code className="text-violetx-300">&lt;/s&gt;</code> at the start
-              and end of every sentence so the model can learn how sentences
-              tend to begin and end. Rare words that fall outside the
-              vocabulary cap are replaced with{" "}
-              <code className="text-amber-300">&lt;UNK&gt;</code>.
+            <Example before='"I love NLP."' after='["i", "love", "nlp"]' />
+            <p>
+              NGramLab can insert sentence-boundary tokens <code>&lt;s&gt;</code>{" "}
+              and <code>&lt;/s&gt;</code>. Rare words outside the vocabulary cap
+              are replaced with <code>&lt;UNK&gt;</code>.
             </p>
           </Concept>
 
-          {/* N-GRAM */}
           <Concept
             icon={<Layers className="h-5 w-5" />}
             label="03"
@@ -91,26 +78,25 @@ export default function ExplainPage() {
             tag="Core idea"
           >
             <p>
-              An <strong>n-gram</strong> is a contiguous sequence of{" "}
-              <em>n</em> tokens. We use them to estimate{" "}
-              <em>"how likely is this next word given the last few words?"</em>.
+              An <strong>n-gram</strong> is a contiguous sequence of <em>n</em>{" "}
+              tokens. We use n-grams to estimate how likely the next word is
+              given the words before it.
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
               <Tile name="unigram" example="['the']" />
               <Tile name="bigram" example="['the','quick']" />
               <Tile name="trigram" example="['the','quick','brown']" />
               <Tile name="4-gram" example="['the','quick','brown','fox']" />
             </div>
-            <p className="text-ink-400">
+            <p>
               A 4-gram model conditions on the previous 3 words to predict the
-              4th. The probability is estimated by counting:
+              fourth. Its probability is estimated by counting:
             </p>
             <Formula>
-              P(w₄ | w₁ w₂ w₃) ≈ Count(w₁ w₂ w₃ w₄) / Count(w₁ w₂ w₃)
+              P(w4 | w1 w2 w3) ~= Count(w1 w2 w3 w4) / Count(w1 w2 w3)
             </Formula>
           </Concept>
 
-          {/* BACKOFF */}
           <Concept
             icon={<ArrowDownToLine className="h-5 w-5" />}
             label="04"
@@ -118,21 +104,18 @@ export default function ExplainPage() {
             tag="LM1"
           >
             <p>
-              When the 4-gram you need was never seen in training, the
-              numerator is zero. <strong>Backoff</strong> says: in that case,
-              fall back to a shorter context and use the trigram. If the
-              trigram is also unseen, try the bigram. Then the unigram. Then
-              give up.
+              When the 4-gram you need was never seen in training, the count is
+              zero. <strong>Backoff</strong> falls back to shorter contexts:
+              trigram, then bigram, then unigram.
             </p>
-            <Formula>4-gram → trigram → bigram → unigram → ε</Formula>
-            <p className="text-ink-400">
-              LM1 uses backoff with <em>no smoothing</em>. This is simple but
-              brittle: a single unseen 4-letter (and shorter) sequence pushes
-              the probability to zero and perplexity to infinity.
+            <Formula>4-gram -&gt; trigram -&gt; bigram -&gt; unigram -&gt; epsilon</Formula>
+            <p>
+              LM1 uses backoff with no smoothing. This is simple but brittle:
+              a single unseen sequence can push probability toward zero and
+              perplexity toward infinity.
             </p>
           </Concept>
 
-          {/* INTERPOLATION */}
           <Concept
             icon={<Blend className="h-5 w-5" />}
             label="05"
@@ -140,20 +123,20 @@ export default function ExplainPage() {
             tag="LM2"
           >
             <p>
-              Instead of picking <em>one</em> order, interpolation{" "}
-              <strong>mixes them all</strong> with weights λ that sum to 1:
+              Instead of choosing one n-gram order, interpolation{" "}
+              <strong>mixes all orders</strong> with weights that sum to 1.
             </p>
             <Formula>
-              P(w | h) = λ₁ · P₁(w) + λ₂ · P₂(w|h) + λ₃ · P₃(w|h) + λ₄ · P₄(w|h)
+              P(w | h) = lambda1 P1(w) + lambda2 P2(w|h) + lambda3 P3(w|h) +
+              lambda4 P4(w|h)
             </Formula>
-            <p className="text-ink-400">
-              Heavier weight on the 4-gram trusts long context more; heavier
-              weight on the unigram falls back to overall word frequencies.
-              Tuning these on a validation set is what the Tuning page does.
+            <p>
+              Heavier 4-gram weight trusts longer context more. Heavier unigram
+              weight falls back to overall word frequency. The Tuning page
+              searches for a good balance.
             </p>
           </Concept>
 
-          {/* SMOOTHING */}
           <Concept
             icon={<Shield className="h-5 w-5" />}
             label="06"
@@ -162,20 +145,16 @@ export default function ExplainPage() {
           >
             <p>
               Smoothing keeps probabilities away from exactly zero by adding a
-              small constant <code>k</code> to every count:
+              small constant <code>k</code> to every count.
             </p>
-            <Formula>P(w | h) = (Count(h, w) + k) / (Count(h) + k · V)</Formula>
-            <p className="text-ink-400">
-              <code>V</code> is the vocabulary size. Pick <code>k = 1</code> and
-              this becomes the classic Laplace (add-one) smoothing.{" "}
-              <code>k = 0.1</code> is gentler and usually performs better on
-              small corpora. NGramLab applies add-k inside each n-gram term of
-              the interpolation, so even unseen 4-grams contribute a non-zero
-              probability.
+            <Formula>P(w | h) = (Count(h, w) + k) / (Count(h) + k * V)</Formula>
+            <p>
+              <code>V</code> is the vocabulary size. NGramLab applies add-k
+              smoothing inside each n-gram term of the interpolation, so unseen
+              4-grams can still contribute a non-zero probability.
             </p>
           </Concept>
 
-          {/* PERPLEXITY */}
           <Concept
             icon={<Gauge className="h-5 w-5" />}
             label="07"
@@ -184,56 +163,51 @@ export default function ExplainPage() {
           >
             <p>
               <strong>Perplexity</strong> measures how surprised the model is
-              by held-out text. It's defined as the exponential of the
-              negative average log-probability:
+              by held-out text. It is based on the negative average
+              log-probability assigned to the test sequence.
             </p>
-            <Formula>PP(W) = exp( − (1 / N) · Σᵢ log P(wᵢ | context) )</Formula>
-            <p className="text-ink-400">
-              Lower is better. A perplexity of 50 means the model is roughly
-              "as confused as if it had 50 equally likely choices at every
-              step". Perplexity blows up if any probability hits zero — which
-              is exactly why LM1's number can be ∞ and LM2's stays finite.
+            <Formula>PP(W) = exp( - (1 / N) * sum log P(w_i | context) )</Formula>
+            <p>
+              Lower is better. Perplexity can blow up if any probability hits
+              zero, which is why LM1 can become infinite while LM2 stays finite.
             </p>
           </Concept>
 
-          {/* TEMPERATURE & SAMPLING */}
           <Concept
             icon={<Layers className="h-5 w-5" />}
             label="08"
             title="Temperature & sampling"
             tag="Generation"
           >
-            <p>
-              When generating, we can be deterministic or random:
-            </p>
-            <ul className="list-disc pl-5 space-y-1 text-ink-300">
+            <p>When generating, the model can choose words in several ways:</p>
+            <ul className="list-disc space-y-1 pl-5">
               <li>
-                <strong>Greedy</strong> — always pick the top word. Predictable
+                <strong>Greedy</strong> - always pick the top word. Predictable
                 but repetitive.
               </li>
               <li>
-                <strong>Weighted random</strong> — sample proportional to
+                <strong>Weighted random</strong> - sample proportional to
                 probability. More natural variation.
               </li>
               <li>
-                <strong>Top-K</strong> — keep only the K most likely words,
-                then sample. Cuts off the long tail.
+                <strong>Top-K</strong> - keep only the K most likely words, then
+                sample from that smaller set.
               </li>
             </ul>
-            <p className="text-ink-400">
+            <p>
               <strong>Temperature</strong> rescales the distribution before
-              sampling. <code>t &lt; 1</code> sharpens (more confident);{" "}
-              <code>t &gt; 1</code> flattens (more diverse).
+              sampling. <code>t &lt; 1</code> sharpens it; <code>t &gt; 1</code>{" "}
+              makes it more diverse.
             </p>
           </Concept>
         </div>
 
-        <div className="mt-10 flex justify-between items-center">
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Link
-            href="/dashboard"
-            className="text-sm text-ink-400 hover:text-ink-100"
+            href="/4gram/dashboard"
+            className="text-sm font-medium text-ink-600 hover:text-ink-900 dark:text-ink-400 dark:hover:text-ink-100"
           >
-            ← Back to dashboard
+            Back to dashboard
           </Link>
           <Link href="/">
             <Button variant="secondary">
@@ -246,8 +220,6 @@ export default function ExplainPage() {
     </div>
   );
 }
-
-/* ───────────── helpers ───────────── */
 
 function Concept({
   icon,
@@ -263,15 +235,15 @@ function Concept({
   children: React.ReactNode;
 }) {
   return (
-    <Card>
-      <CardHeader>
+    <Card className="overflow-hidden">
+      <CardHeader className="border-b border-ink-200/70 bg-ink-50/70 dark:border-ink-800 dark:bg-ink-950/40">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="rounded-lg border border-ink-800 bg-ink-950 p-2 text-accent-300">
+            <div className="rounded-lg border border-accent-400/30 bg-accent-400/10 p-2 text-accent-700 dark:text-accent-300">
               {icon}
             </div>
             <div>
-              <CardDescription className="text-[10px] tracking-widest uppercase">
+              <CardDescription className="text-[10px] uppercase tracking-widest">
                 {label}
               </CardDescription>
               <CardTitle className="text-xl">{title}</CardTitle>
@@ -280,8 +252,8 @@ function Concept({
           <Badge variant="default">{tag}</Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3 text-sm text-ink-200 leading-relaxed">
+      <CardContent className="pt-5">
+        <div className="space-y-4 text-sm leading-7 text-ink-700 dark:text-ink-300 [&_code]:rounded [&_code]:bg-ink-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-ink-900 dark:[&_code]:bg-ink-950 dark:[&_code]:text-accent-200 [&_strong]:font-semibold [&_strong]:text-ink-950 dark:[&_strong]:text-ink-100">
           {children}
         </div>
       </CardContent>
@@ -291,18 +263,18 @@ function Concept({
 
 function Example({ before, after }: { before: string; after: string }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 my-1">
-      <div className="rounded-md border border-ink-800 bg-ink-950 px-3 py-2">
-        <div className="text-[10px] uppercase tracking-wider text-ink-500 mb-1">
+    <div className="my-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="rounded-lg border border-ink-200 bg-ink-50 px-3 py-2 dark:border-ink-800 dark:bg-ink-950">
+        <div className="mb-1 text-[10px] uppercase tracking-wider text-ink-500 dark:text-ink-400">
           Input
         </div>
-        <code className="text-ink-100">{before}</code>
+        <code>{before}</code>
       </div>
-      <div className="rounded-md border border-ink-800 bg-ink-950 px-3 py-2">
-        <div className="text-[10px] uppercase tracking-wider text-ink-500 mb-1">
+      <div className="rounded-lg border border-accent-400/30 bg-accent-400/10 px-3 py-2 dark:bg-accent-400/5">
+        <div className="mb-1 text-[10px] uppercase tracking-wider text-accent-700 dark:text-accent-300">
           Output
         </div>
-        <code className="text-accent-300">{after}</code>
+        <code>{after}</code>
       </div>
     </div>
   );
@@ -310,18 +282,18 @@ function Example({ before, after }: { before: string; after: string }) {
 
 function Tile({ name, example }: { name: string; example: string }) {
   return (
-    <div className="rounded-md border border-ink-800 bg-ink-950 px-2 py-1.5 text-center">
-      <div className="text-[10px] uppercase tracking-wider text-ink-500">
+    <div className="rounded-lg border border-ink-200 bg-ink-50 px-2 py-2 text-center dark:border-ink-800 dark:bg-ink-950">
+      <div className="text-[10px] uppercase tracking-wider text-ink-500 dark:text-ink-400">
         {name}
       </div>
-      <code className="text-xs text-violetx-300">{example}</code>
+      <code className="text-xs">{example}</code>
     </div>
   );
 }
 
 function Formula({ children }: { children: React.ReactNode }) {
   return (
-    <pre className="rounded-lg border border-ink-800 bg-ink-950 p-3 text-xs text-accent-200 overflow-x-auto">
+    <pre className="overflow-x-auto rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs leading-6 text-ink-800 dark:border-ink-800 dark:bg-ink-950 dark:text-accent-200">
       {children}
     </pre>
   );

@@ -25,7 +25,7 @@ import {
 import { ThemeToggle } from "./ThemeToggle";
 import { useExperiment } from "@/lib/store/experiment";
 import { cn } from "@/lib/utils";
-import logoMark from "@/NGram.png";
+import logoMark from "@/NGramLab.png";
 
 type Step = {
   href: string;
@@ -47,19 +47,19 @@ type DoneFlags = {
 };
 
 const STEPS: Step[] = [
-  { href: "/corpus", label: "Corpus", icon: BookOpen, step: 1, isDoneKey: "corpus" },
-  { href: "/preprocessing", label: "Preprocess", icon: Type, step: 2, isDoneKey: "preprocess" },
-  { href: "/split", label: "Split", icon: Scissors, step: 3, isDoneKey: "split" },
-  { href: "/training", label: "Train", icon: Brain, step: 4, isDoneKey: "training" },
-  { href: "/tuning", label: "Tune", icon: SlidersHorizontal, step: 5, isDoneKey: "tuning" },
-  { href: "/evaluation", label: "Evaluate", icon: Gauge, step: 6, isDoneKey: "evaluation" },
-  { href: "/generator", label: "Generate", icon: Wand2, step: 7, isDoneKey: "generator" },
-  { href: "/report", label: "Report", icon: FileText, step: 8, isDoneKey: "report" },
+  { href: "/4gram/corpus", label: "Corpus", icon: BookOpen, step: 1, isDoneKey: "corpus" },
+  { href: "/4gram/preprocessing", label: "Preprocess", icon: Type, step: 2, isDoneKey: "preprocess" },
+  { href: "/4gram/split", label: "Split", icon: Scissors, step: 3, isDoneKey: "split" },
+  { href: "/4gram/training", label: "Train", icon: Brain, step: 4, isDoneKey: "training" },
+  { href: "/4gram/tuning", label: "Tune", icon: SlidersHorizontal, step: 5, isDoneKey: "tuning" },
+  { href: "/4gram/evaluation", label: "Evaluate", icon: Gauge, step: 6, isDoneKey: "evaluation" },
+  { href: "/4gram/generator", label: "Generate", icon: Wand2, step: 7, isDoneKey: "generator" },
+  { href: "/4gram/report", label: "Report", icon: FileText, step: 8, isDoneKey: "report" },
 ];
 
 const AUX_LINKS: Step[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, isDoneKey: "corpus" },
-  { href: "/explain", label: "Methodology", icon: GraduationCap, isDoneKey: "corpus" },
+  { href: "/4gram/dashboard", label: "Dashboard", icon: LayoutDashboard, isDoneKey: "corpus" },
+  { href: "/4gram/explain", label: "Methodology", icon: GraduationCap, isDoneKey: "corpus" },
 ];
 
 export function Sidebar() {
@@ -124,7 +124,7 @@ export function Sidebar() {
         type="button"
         aria-label="Open menu"
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-3 left-3 z-40 flex h-10 w-10 items-center justify-center rounded-lg border border-ink-200/60 dark:border-ink-800/80 bg-ink-50/90 dark:bg-ink-950/90 backdrop-blur-md text-ink-700 dark:text-ink-200 shadow-sm"
+        className="lg:hidden fixed top-3 left-3 z-40 flex h-10 w-10 items-center justify-center rounded-lg border border-ink-200/60 dark:border-ink-800/80 bg-ink-50/90 dark:bg-ink-950/90 backdrop-blur-md text-ink-700 dark:text-ink-200 shadow-sm print:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -141,7 +141,7 @@ export function Sidebar() {
       {/* Sidebar — desktop fixed, mobile slide-in */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 h-screen lg:h-screen w-72 lg:w-64 shrink-0",
+          "fixed lg:sticky top-0 left-0 z-50 h-screen lg:h-screen w-72 lg:w-64 shrink-0 print:hidden",
           "border-r border-ink-200/60 dark:border-ink-800/80",
           "bg-ink-50/95 dark:bg-ink-950/95 backdrop-blur-md",
           "transition-transform duration-300 ease-out",
@@ -152,7 +152,7 @@ export function Sidebar() {
           {/* Header */}
           <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-ink-200/60 dark:border-ink-800/80">
             <Link
-              href="/"
+              href="/methods/4gram"
               className="flex items-center gap-2 group"
               onClick={() => setMobileOpen(false)}
             >
