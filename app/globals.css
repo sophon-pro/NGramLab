@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom font stack — keeping it dependency-free with web-safe + Google Fonts via link tag in layout */
+:root {
+  --font-sans: "Inter", "ui-sans-serif", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply bg-ink-50 text-ink-900;
+}
+
+.dark body {
+  @apply bg-ink-950 text-ink-100;
+}
+
+/* Grid background pattern used on hero / landing surfaces */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+}
+
+/* Radial accent glow used behind hero / dashboard cards */
+.bg-glow {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(34, 211, 238, 0.18), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(167, 139, 250, 0.14), transparent 40%);
+}
+
+.dark .bg-glow {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(34, 211, 238, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(167, 139, 250, 0.1), transparent 40%);
+}
+
+/* Custom scrollbar for code/preview panels */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-ink-200 dark:bg-ink-800 rounded-full;
+}
+
+/* Range slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  @apply bg-ink-200 dark:bg-ink-700 rounded-full;
+}
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  @apply bg-ink-200 dark:bg-ink-700 rounded-full;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -7px;
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  @apply bg-accent shadow-glow;
+}
+input[type="range"]::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border: none;
+  border-radius: 999px;
+  @apply bg-accent;
+}
+
+/* Card hover lift */
+.card-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  @apply shadow-soft;
+}
