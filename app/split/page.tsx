@@ -158,7 +158,7 @@ export default function SplitPage() {
           )}
 
           {split && (
-            <Card className="mt-6">
+            <Card className="hidden">
               <CardHeader>
                 <CardTitle>Preview each split</CardTitle>
                 <CardDescription>
@@ -193,13 +193,14 @@ export default function SplitPage() {
         </FadeIn>
 
         {/* Chart */}
-        <FadeIn delay={0.1}>
-          <Card>
+        <FadeIn delay={0.1} className="h-full">
+          <Card className="flex h-full flex-col">
             <CardHeader>
               <CardTitle>Distribution</CardTitle>
               <CardDescription>How tokens are allocated.</CardDescription>
             </CardHeader>
-            <CardContent className="h-64">
+            <CardContent className="flex flex-1 flex-col">
+              <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -224,6 +225,7 @@ export default function SplitPage() {
                   />
                 </PieChart>
               </ResponsiveContainer>
+              </div>
               <div className="mt-2 grid grid-cols-3 gap-1 text-center text-xs">
                 {chartData.map((d, i) => (
                   <div key={d.name}>
@@ -235,16 +237,64 @@ export default function SplitPage() {
                   </div>
                 ))}
               </div>
+              <div className="mt-auto rounded-lg border border-accent-400/30 bg-accent-400/10 px-3 py-2 text-xs leading-relaxed text-accent-800 dark:text-accent-200">
+                <strong>Tip:</strong> The split uses contiguous token slices:
+                train first, validation next, test last.
+              </div>
             </CardContent>
           </Card>
 
-          <Alert variant="info" className="mt-4">
+          <Alert
+            variant="info"
+            className="hidden"
+          >
             The split is taken as <strong>contiguous slices</strong> of the
             token stream — train is the prefix, then validation, then test.
             This preserves sentence-level coherence and matches what the
             project rubric expects.
           </Alert>
         </FadeIn>
+
+        {split && (
+          <FadeIn className="lg:col-span-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Preview each split</CardTitle>
+                <CardDescription>
+                  First few tokens of each portion.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+                  {(["train", "validation", "test"] as const).map((k, idx) => (
+                    <div
+                      key={k}
+                      className="flex min-h-[200px] flex-col rounded-xl border border-ink-200 bg-white p-4 dark:border-ink-800 dark:bg-ink-950/40"
+                    >
+                      <div className="mb-3 flex items-center gap-2">
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ background: COLORS[idx] }}
+                        />
+                        <span className="text-xs font-medium uppercase tracking-wider text-ink-500 dark:text-ink-400">
+                          {k} · {split[k].length.toLocaleString()} tokens
+                        </span>
+                      </div>
+                      <div className="flex-1 whitespace-normal break-words rounded-md bg-ink-50 p-3 font-mono text-xs leading-relaxed ring-1 ring-inset ring-ink-200/60 dark:bg-ink-950 dark:ring-ink-800/80">
+                        {split[k].slice(0, 40).join(" ") || (
+                          <span className="text-ink-400">— empty —</span>
+                        )}
+                        {split[k].length > 40 && (
+                          <span className="text-ink-400"> …</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </FadeIn>
+        )}
       </div>
     </div>
   );

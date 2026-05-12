@@ -49,7 +49,7 @@ export default function ExplainPage() {
             </p>
             <p>
               In NGramLab you can paste your own text, upload a <code>.txt</code>{" "}
-              file, extract text from a website, or pick a bundled sample.
+              file, or extract text from a website.
             </p>
           </Concept>
 
@@ -82,7 +82,7 @@ export default function ExplainPage() {
               tokens. We use n-grams to estimate how likely the next word is
               given the words before it.
             </p>
-            <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <Tile name="unigram" example="['the']" />
               <Tile name="bigram" example="['the','quick']" />
               <Tile name="trigram" example="['the','quick','brown']" />
@@ -222,7 +222,6 @@ export default function ExplainPage() {
 }
 
 function Concept({
-  icon,
   label,
   title,
   tag,
@@ -238,22 +237,17 @@ function Concept({
     <Card className="overflow-hidden">
       <CardHeader className="border-b border-ink-200/70 bg-ink-50/70 dark:border-ink-800 dark:bg-ink-950/40">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg border border-accent-400/30 bg-accent-400/10 p-2 text-accent-700 dark:text-accent-300">
-              {icon}
-            </div>
-            <div>
-              <CardDescription className="text-[10px] uppercase tracking-widest">
-                {label}
-              </CardDescription>
-              <CardTitle className="text-xl">{title}</CardTitle>
-            </div>
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 min-w-10 items-center justify-center rounded-lg border border-accent-400/30 bg-accent-400/10 font-mono text-sm font-semibold text-accent-700 dark:text-accent-300">
+              {label}
+            </span>
+            <CardTitle className="text-xl">{title}</CardTitle>
           </div>
           <Badge variant="default">{tag}</Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-5">
-        <div className="space-y-4 text-sm leading-7 text-ink-700 dark:text-ink-300 [&_code]:rounded [&_code]:bg-ink-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-ink-900 dark:[&_code]:bg-ink-950 dark:[&_code]:text-accent-200 [&_strong]:font-semibold [&_strong]:text-ink-950 dark:[&_strong]:text-ink-100">
+        <div className="space-y-4 text-[15px] leading-7 text-ink-700 dark:text-ink-300 [&_code]:rounded [&_code]:bg-ink-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.95em] [&_code]:text-ink-900 dark:[&_code]:bg-ink-950 dark:[&_code]:text-accent-200 [&_strong]:font-semibold [&_strong]:text-ink-950 dark:[&_strong]:text-ink-100">
           {children}
         </div>
       </CardContent>
@@ -265,13 +259,13 @@ function Example({ before, after }: { before: string; after: string }) {
   return (
     <div className="my-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
       <div className="rounded-lg border border-ink-200 bg-ink-50 px-3 py-2 dark:border-ink-800 dark:bg-ink-950">
-        <div className="mb-1 text-[10px] uppercase tracking-wider text-ink-500 dark:text-ink-400">
+        <div className="mb-1 text-xs uppercase tracking-wider text-ink-500 dark:text-ink-400">
           Input
         </div>
         <code>{before}</code>
       </div>
       <div className="rounded-lg border border-accent-400/30 bg-accent-400/10 px-3 py-2 dark:bg-accent-400/5">
-        <div className="mb-1 text-[10px] uppercase tracking-wider text-accent-700 dark:text-accent-300">
+        <div className="mb-1 text-xs uppercase tracking-wider text-accent-700 dark:text-accent-300">
           Output
         </div>
         <code>{after}</code>
@@ -282,18 +276,18 @@ function Example({ before, after }: { before: string; after: string }) {
 
 function Tile({ name, example }: { name: string; example: string }) {
   return (
-    <div className="rounded-lg border border-ink-200 bg-ink-50 px-2 py-2 text-center dark:border-ink-800 dark:bg-ink-950">
-      <div className="text-[10px] uppercase tracking-wider text-ink-500 dark:text-ink-400">
+    <div className="rounded-lg border border-ink-200 bg-ink-50 px-3 py-3 text-center dark:border-ink-800 dark:bg-ink-950">
+      <div className="text-xs uppercase tracking-wider text-ink-500 dark:text-ink-400">
         {name}
       </div>
-      <code className="text-xs">{example}</code>
+      <code className="block break-all text-xs sm:text-[13px]">{example}</code>
     </div>
   );
 }
 
 function Formula({ children }: { children: React.ReactNode }) {
   return (
-    <pre className="overflow-x-auto rounded-lg border border-ink-200 bg-ink-50 p-3 text-xs leading-6 text-ink-800 dark:border-ink-800 dark:bg-ink-950 dark:text-accent-200">
+    <pre className="overflow-x-auto rounded-lg border border-ink-200 bg-ink-50 p-4 text-[13px] leading-6 text-ink-800 dark:border-ink-800 dark:bg-ink-950 dark:text-accent-200">
       {children}
     </pre>
   );

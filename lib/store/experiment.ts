@@ -85,11 +85,28 @@ const initialState: SerializableState & NonSerializableState = {
   trainedAt: null,
 };
 
+function clearDerivedState() {
+  return {
+    preprocessed: null,
+    split: null,
+    counts: null,
+    lm1Result: null,
+    lm2Result: null,
+    bestHyperparameters: null,
+    generatedExamples: [],
+    lastGenerationSteps: [],
+    trainedAt: null,
+  };
+}
+
 export const useExperiment = create<Store>()(
   persist(
     (set) => ({
       ...initialState,
-      setRawText: (s) => set({ rawText: s }),
+      setRawText: (s) =>
+        set((st) =>
+          st.rawText === s ? { rawText: s } : { rawText: s, ...clearDerivedState() }
+        ),
       setPreprocessOptions: (o) =>
         set((st) => ({ preprocessOptions: { ...st.preprocessOptions, ...o } })),
       setPreprocessed: (p) => set({ preprocessed: p }),
@@ -116,6 +133,16 @@ export const useExperiment = create<Store>()(
       partialize: (state) => {
         const { counts, ...rest } = state as Store;
         return rest;
+      },
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<Store> | undefined;
+        const merged = { ...currentState, ...persisted };
+
+        if (!merged.rawText?.trim()) {
+          return { ...merged, ...clearDerivedState() };
+        }
+
+        return merged;
       },
     }
   )

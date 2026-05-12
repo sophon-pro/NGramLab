@@ -155,13 +155,8 @@ export default function TrainingPage() {
         step={{ current: 4, total: 8 }}
       >
         <Link href="/4gram/tuning">
-          <Button variant="outline">
+          <Button>
             Tune LM2 <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
-        <Link href="/4gram/evaluation">
-          <Button disabled={lm1Status !== "done" && lm2Status !== "done"}>
-            Evaluate <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
       </PageHeader>
@@ -173,16 +168,17 @@ export default function TrainingPage() {
         </Alert>
       )}
 
+      <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
       {/* N-gram counter */}
-      <FadeIn>
-        <Card>
+      <FadeIn className="lg:col-span-2 h-full">
+        <Card className="flex h-full flex-col">
           <CardHeader>
             <CardTitle>N-gram counts</CardTitle>
             <CardDescription>
               Computed from the training split. Switch tabs to see each order.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-1 flex-col">
             <div className="flex flex-wrap gap-2 mb-4">
               {TABS.map((t) => (
                 <button
@@ -212,7 +208,7 @@ export default function TrainingPage() {
                   />
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="flex-1 overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs uppercase tracking-wider text-ink-500 dark:text-ink-400 border-b border-ink-200 dark:border-ink-800">
@@ -250,7 +246,7 @@ export default function TrainingPage() {
       </FadeIn>
 
       {/* Model cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <div className="space-y-6">
         {/* LM1 */}
         <FadeIn delay={0.05}>
           <Card>
@@ -404,6 +400,7 @@ final fallback → ε (≈ 1e-10)`}
             </CardContent>
           </Card>
         </FadeIn>
+      </div>
       </div>
     </div>
   );

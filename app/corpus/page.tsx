@@ -1,18 +1,18 @@
 // app/corpus/page.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import {
   FileText,
   Upload,
   ClipboardPaste,
-  Sparkles,
   Globe2,
   Loader2,
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
+  Trash2,
 } from "lucide-react";
 import {
   Button,
@@ -28,42 +28,20 @@ import {
   FadeIn,
 } from "@/components/ui/primitives";
 import { useExperiment } from "@/lib/store/experiment";
-import { SAMPLE_CORPORA } from "@/lib/sample-corpus";
 import { rawCorpusStats } from "@/lib/nlp/preprocess";
 import { cn, formatNumber } from "@/lib/utils";
 
-type Mode = "sample" | "paste" | "upload" | "website";
+type Mode = "paste" | "upload" | "website";
 
 export default function CorpusPage() {
   const { rawText, setRawText } = useExperiment();
-  const [mode, setMode] = useState<Mode>("sample");
-  const [selectedSample, setSelectedSample] = useState<string>(SAMPLE_CORPORA[0].id);
+  const [mode, setMode] = useState<Mode>("paste");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [websiteStatus, setWebsiteStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [websiteMessage, setWebsiteMessage] = useState("");
-  const [hydrated, setHydrated] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => setHydrated(true), []);
-
-  // If the user is on the "sample" tab and no text is loaded, pre-load one
-  // so the preview is never empty on first visit.
-  useEffect(() => {
-    if (!hydrated) return;
-    if (mode === "sample" && rawText.trim().length === 0) {
-      const sample = SAMPLE_CORPORA.find((c) => c.id === selectedSample);
-      if (sample) setRawText(sample.text);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, mode]);
-
   const stats = rawCorpusStats(rawText || "");
-
-  function loadSample(id: string) {
-    setSelectedSample(id);
-    const sample = SAMPLE_CORPORA.find((c) => c.id === id);
-    if (sample) setRawText(sample.text);
-  }
 
   function onFileChosen(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -162,6 +140,13 @@ export default function CorpusPage() {
     }
   }
 
+  function clearCurrentText() {
+    setRawText("");
+    setWebsiteStatus("idle");
+    setWebsiteMessage("");
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
   // Validation flags
   const tooShort = stats.words < 100;
   const tooFewVocab = stats.uniqueWords < 30;
@@ -172,9 +157,17 @@ export default function CorpusPage() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <PageHeader
         title="Corpus"
-        description="Pick a sample, paste text, upload a .txt file, or extract readable text from a website URL."
+        description="Paste text, upload a .txt file, or extract readable text from a website URL."
         step={{ current: 1, total: 8 }}
       >
+        <Button
+          variant="outline"
+          onClick={clearCurrentText}
+          disabled={!rawText}
+        >
+          <Trash2 className="h-4 w-4" />
+          Clear current text
+        </Button>
         <Link href="/4gram/preprocessing">
           <Button>
             Next: Preprocess <ArrowRight className="h-4 w-4" />
@@ -185,19 +178,18 @@ export default function CorpusPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: source picker */}
         <FadeIn className="lg:col-span-2">
-          <Card>
-            <CardHeader>
+          <Card className="flex min-h-[520px] flex-col">
+            <CardHeader className="px-6 pt-5 pb-2">
               <CardTitle>Choose a source</CardTitle>
               <CardDescription>
                 Switching tabs preserves the underlying text.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+            <CardContent className="flex flex-1 flex-col">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
                 {[
-                  { id: "sample", label: "Sample", icon: Sparkles },
-                  { id: "paste", label: "Paste", icon: ClipboardPaste },
-                  { id: "upload", label: "Upload", icon: Upload },
+                  { id: "paste", label: "Paste Text", icon: ClipboardPaste },
+                  { id: "upload", label: "Upload Text File", icon: Upload },
                   { id: "website", label: "Website", icon: Globe2 },
                 ].map((t) => {
                   const Icon = t.icon;
@@ -220,43 +212,15 @@ export default function CorpusPage() {
                 })}
               </div>
 
-              {mode === "sample" && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {SAMPLE_CORPORA.map((c) => {
-                      const active = selectedSample === c.id;
-                      return (
-                        <button
-                          key={c.id}
-                          onClick={() => loadSample(c.id)}
-                          className={cn(
-                            "text-left rounded-xl border p-4 transition-all",
-                            active
-                              ? "border-accent-400 bg-accent-400/5 shadow-glow"
-                              : "border-ink-200 dark:border-ink-800 hover:border-ink-300 dark:hover:border-ink-700"
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="font-display font-semibold">
-                              {c.name}
-                            </div>
-                            {active && (
-                              <CheckCircle2 className="h-4 w-4 text-accent-500" />
-                            )}
-                          </div>
-                          <p className="text-xs text-ink-500 dark:text-ink-400 mt-1">
-                            {c.description}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
+              <div
+                className={cn(
+                  "flex min-h-[340px] flex-1 flex-col",
+                  mode === "website" ? "overflow-auto scrollbar-thin" : "overflow-hidden"
+                )}
+              >
               {mode === "paste" && (
                 <textarea
-                  className="w-full min-h-[200px] rounded-lg border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-950 p-3 text-sm font-mono scrollbar-thin focus:outline-none focus:ring-2 focus:ring-accent-400"
+                  className="min-h-0 flex-1 w-full resize-none rounded-lg border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-950 p-3 text-sm font-mono scrollbar-thin focus:outline-none focus:ring-2 focus:ring-accent-400"
                   placeholder="Paste your corpus text here. At least a couple of paragraphs works best."
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
@@ -266,9 +230,9 @@ export default function CorpusPage() {
               {mode === "upload" && (
                 <div
                   onClick={() => fileRef.current?.click()}
-                  className="rounded-xl border-2 border-dashed border-ink-200 dark:border-ink-800 p-10 text-center cursor-pointer hover:border-accent-400 hover:bg-accent-400/5 transition-colors"
+                  className="flex min-h-0 flex-1 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-ink-200 p-10 text-center transition-colors hover:border-accent-400 hover:bg-accent-400/5 dark:border-ink-800"
                 >
-                  <Upload className="h-8 w-8 mx-auto text-ink-400" />
+                  <Upload className="h-8 w-8 text-ink-400" />
                   <p className="mt-3 text-sm font-medium">
                     Click to upload a .txt file
                   </p>
@@ -286,7 +250,7 @@ export default function CorpusPage() {
               )}
 
               {mode === "website" && (
-                <div className="space-y-3">
+                <div className="flex min-h-0 flex-1 flex-col justify-center space-y-3 rounded-lg border border-ink-200 bg-ink-50/40 p-4 dark:border-ink-800 dark:bg-ink-950/40">
                   <form onSubmit={loadWebsiteText} className="space-y-3">
                     <div>
                       <label
@@ -347,6 +311,7 @@ export default function CorpusPage() {
                   </p>
                 </div>
               )}
+              </div>
             </CardContent>
           </Card>
 
@@ -358,8 +323,8 @@ export default function CorpusPage() {
                 First few hundred characters — exactly what the preprocessor will see.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="rounded-lg bg-ink-50 dark:bg-ink-950 ring-1 ring-inset ring-ink-200/60 dark:ring-ink-800/80 p-4 text-sm font-mono scrollbar-thin max-h-72 overflow-auto whitespace-pre-wrap">
+            <CardContent className="pb-5 pt-1">
+              <div className="rounded-lg bg-ink-50 dark:bg-ink-950 ring-1 ring-inset ring-ink-200/60 dark:ring-ink-800/80 p-3 text-sm font-mono scrollbar-thin max-h-52 overflow-auto whitespace-pre-wrap">
                 {rawText || (
                   <span className="text-ink-400">— no text loaded —</span>
                 )}

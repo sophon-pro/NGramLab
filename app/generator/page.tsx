@@ -127,7 +127,7 @@ export default function GeneratorPage() {
       )}
 
       <FadeIn>
-        <div className="mb-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="mb-8 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
           <Card>
             <CardHeader className="pb-4">
               <CardTitle>Controls</CardTitle>
@@ -310,137 +310,141 @@ export default function GeneratorPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <CardTitle>Generated text</CardTitle>
+          <div className="flex h-full min-h-0 flex-col gap-6">
+            <Card className="flex min-h-0 flex-1 flex-col">
+              <CardHeader>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <CardTitle>Generated text</CardTitle>
+                    <CardDescription>
+                      Produced by{" "}
+                      <Badge variant={model === "lm1" ? "accent" : "violet"}>
+                        {model === "lm1" ? "LM1 Backoff" : "LM2 Interpolation"}
+                      </Badge>
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={copyOutput}
+                      disabled={!output}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      {copied ? "Copied" : "Copy"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearOutput}
+                      disabled={!output}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex min-h-0 flex-1 flex-col">
+                <div
+                  className={`min-h-[220px] flex-1 overflow-auto rounded-lg border p-6 text-base leading-relaxed sm:text-lg ${
+                    output
+                      ? "border-ink-200 bg-ink-50 text-ink-900 shadow-inner dark:border-ink-800 dark:bg-ink-950 dark:text-ink-100"
+                      : "border-dashed border-ink-300 bg-ink-50 text-ink-500 italic dark:border-ink-800 dark:bg-ink-950/50 dark:text-ink-400"
+                  }`}
+                >
+                  {output ||
+                    "Choose a model, enter a seed, then click Generate. The output will appear here."}
+                </div>
+
+                {output && (
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-ink-500 dark:text-ink-400 sm:grid-cols-4">
+                    <span>
+                      Length:{" "}
+                      <span className="font-medium text-ink-700 dark:text-ink-300">
+                        {formatNumber(output.split(/\s+/).length)} words
+                      </span>
+                    </span>
+                    <span>
+                      Steps:{" "}
+                      <span className="font-medium text-ink-700 dark:text-ink-300">
+                        {formatNumber(lastGenerationSteps.length)}
+                      </span>
+                    </span>
+                    <span>
+                      Strategy:{" "}
+                      <span className="font-medium text-ink-700 dark:text-ink-300">
+                        {strategy}
+                      </span>
+                    </span>
+                    <span>
+                      Temperature:{" "}
+                      <span className="font-medium text-ink-700 dark:text-ink-300">
+                        {temperature.toFixed(2)}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {lastGenerationSteps.length > 0 && (
+              <Card className="flex max-h-[360px] min-h-0 flex-col">
+                <CardHeader>
+                  <CardTitle>Generation trace</CardTitle>
                   <CardDescription>
-                    Produced by{" "}
-                    <Badge variant={model === "lm1" ? "accent" : "violet"}>
-                      {model === "lm1" ? "LM1 Backoff" : "LM2 Interpolation"}
-                    </Badge>
+                    For each step we show the 3-word context, the picked word,
+                    and the probability assigned to that pick after temperature.
                   </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copyOutput}
-                    disabled={!output}
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                    {copied ? "Copied" : "Copy"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearOutput}
-                    disabled={!output}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Clear
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div
-                className={`min-h-[220px] rounded-lg border p-6 text-base leading-relaxed sm:text-lg ${
-                  output
-                    ? "border-ink-200 bg-ink-50 text-ink-900 shadow-inner dark:border-ink-800 dark:bg-ink-950 dark:text-ink-100"
-                    : "border-dashed border-ink-300 bg-ink-50 text-ink-500 italic dark:border-ink-800 dark:bg-ink-950/50 dark:text-ink-400"
-                }`}
-              >
-                {output ||
-                  "Choose a model, enter a seed, then click Generate. The output will appear here."}
-              </div>
-
-              {output && (
-                <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-ink-500 dark:text-ink-400 sm:grid-cols-4">
-                  <span>
-                    Length:{" "}
-                    <span className="font-medium text-ink-700 dark:text-ink-300">
-                      {formatNumber(output.split(/\s+/).length)} words
-                    </span>
-                  </span>
-                  <span>
-                    Steps:{" "}
-                    <span className="font-medium text-ink-700 dark:text-ink-300">
-                      {formatNumber(lastGenerationSteps.length)}
-                    </span>
-                  </span>
-                  <span>
-                    Strategy:{" "}
-                    <span className="font-medium text-ink-700 dark:text-ink-300">
-                      {strategy}
-                    </span>
-                  </span>
-                  <span>
-                    Temperature:{" "}
-                    <span className="font-medium text-ink-700 dark:text-ink-300">
-                      {temperature.toFixed(2)}
-                    </span>
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent className="min-h-0">
+                  <div className="max-h-[216px] overflow-auto rounded-lg border border-ink-200 dark:border-ink-800">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-ink-50 text-left text-ink-600 dark:bg-ink-950 dark:text-ink-300">
+                        <tr>
+                          <th className="px-3 py-2 font-medium">Step</th>
+                          <th className="px-3 py-2 font-medium">Context</th>
+                          <th className="px-3 py-2 font-medium">
+                            Picked word
+                          </th>
+                          <th className="px-3 py-2 font-medium text-right">
+                            Probability
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-ink-200 dark:divide-ink-800">
+                        {lastGenerationSteps.slice(0, 60).map((s) => (
+                          <tr
+                            key={s.step}
+                            className="hover:bg-ink-50/80 dark:hover:bg-ink-800/30"
+                          >
+                            <td className="px-3 py-2 text-ink-500 dark:text-ink-400">
+                              {s.step}
+                            </td>
+                            <td className="px-3 py-2 font-mono text-xs text-ink-600 dark:text-ink-300">
+                              {s.context || "-"}
+                            </td>
+                            <td className="px-3 py-2 font-mono font-medium text-accent-700 dark:text-accent-300">
+                              {s.selectedWord}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono text-ink-600 dark:text-ink-300">
+                              {s.probability.toExponential(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {lastGenerationSteps.length > 60 && (
+                    <p className="mt-2 text-xs text-ink-500 dark:text-ink-400">
+                      Showing first 60 steps of {lastGenerationSteps.length}.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
-
-        {lastGenerationSteps.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Generation trace</CardTitle>
-              <CardDescription>
-                For each step we show the 3-word context, the picked word, and
-                the probability assigned to that pick after temperature.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto rounded-lg border border-ink-200 dark:border-ink-800">
-                <table className="w-full text-sm">
-                  <thead className="bg-ink-50 text-left text-ink-600 dark:bg-ink-950 dark:text-ink-300">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">Step</th>
-                      <th className="px-3 py-2 font-medium">Context</th>
-                      <th className="px-3 py-2 font-medium">Picked word</th>
-                      <th className="px-3 py-2 font-medium text-right">
-                        Probability
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-ink-200 dark:divide-ink-800">
-                    {lastGenerationSteps.slice(0, 60).map((s) => (
-                      <tr
-                        key={s.step}
-                        className="hover:bg-ink-50/80 dark:hover:bg-ink-800/30"
-                      >
-                        <td className="px-3 py-2 text-ink-500 dark:text-ink-400">
-                          {s.step}
-                        </td>
-                        <td className="px-3 py-2 font-mono text-xs text-ink-600 dark:text-ink-300">
-                          {s.context || "-"}
-                        </td>
-                        <td className="px-3 py-2 font-mono font-medium text-accent-700 dark:text-accent-300">
-                          {s.selectedWord}
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono text-ink-600 dark:text-ink-300">
-                          {s.probability.toExponential(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {lastGenerationSteps.length > 60 && (
-                <p className="mt-2 text-xs text-ink-500 dark:text-ink-400">
-                  Showing first 60 steps of {lastGenerationSteps.length}.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
         {generatedExamples.length > 1 && (
           <Card className="mb-8">
