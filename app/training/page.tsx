@@ -266,13 +266,14 @@ export default function TrainingPage() {
               <pre className="rounded-md bg-ink-50 dark:bg-ink-950 ring-1 ring-inset ring-ink-200/60 dark:ring-ink-800/80 p-3 text-xs font-mono mb-4 overflow-x-auto">
 {`if Count(w₋₃ w₋₂ w₋₁ wᵢ) > 0
    → P = Count(...) / Count(w₋₃ w₋₂ w₋₁)
-else fall back to trigram, bigram, unigram
-final fallback → ε (≈ 1e-10)`}
+else fall back to trigram   → α · P_tri
+else fall back to bigram    → α² · P_bi
+else fall back to unigram   → α³ · add-1 P_uni  (α = 0.4)`}
               </pre>
 
-              <Alert variant="warn" className="mb-4">
-                Without smoothing the model can hit zero (or near-zero) probability on
-                unseen contexts — perplexity may blow up.
+              <Alert variant="info" className="mb-4">
+                Backoff discounts lower-order probabilities by α = 0.4 per step.
+                The add-1 smoothed unigram floor keeps perplexity finite.
               </Alert>
 
               <div className="flex items-center gap-2">

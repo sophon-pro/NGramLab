@@ -19,8 +19,7 @@ function safeLog(p: number): number {
  */
 export function perplexityBackoff(
   testTokens: Tokens,
-  counts: AllCounts,
-  epsilon = 1e-10
+  counts: AllCounts
 ): { perplexity: number; avgLogProb: number; N: number } {
   if (testTokens.length < 4) {
     return { perplexity: Infinity, avgLogProb: 0, N: 0 };
@@ -30,7 +29,7 @@ export function perplexityBackoff(
   for (let i = 3; i < testTokens.length; i++) {
     const context = testTokens.slice(i - 3, i);
     const word = testTokens[i];
-    const p = getBackoffProbability(context, word, counts, { epsilon });
+    const p = getBackoffProbability(context, word, counts);
     sumLog += safeLog(p);
     N += 1;
   }

@@ -108,11 +108,12 @@ export default function ExplainPage() {
               zero. <strong>Backoff</strong> falls back to shorter contexts:
               trigram, then bigram, then unigram.
             </p>
-            <Formula>4-gram -&gt; trigram -&gt; bigram -&gt; unigram -&gt; epsilon</Formula>
+            <Formula>4-gram → α·trigram → α²·bigram → α³·add-1 unigram</Formula>
             <p>
-              LM1 uses backoff with no smoothing. This is simple but brittle:
-              a single unseen sequence can push probability toward zero and
-              perplexity toward infinity.
+              LM1 uses Katz-style backoff (α = 0.4). Each fallback step
+              discounts the probability by α so that lower-order estimates do
+              not over-credit coarser n-grams. The final unigram uses add-1
+              smoothing to keep probabilities positive.
             </p>
           </Concept>
 
