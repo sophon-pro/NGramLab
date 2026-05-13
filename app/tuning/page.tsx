@@ -1,7 +1,7 @@
 // app/tuning/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Trophy, ZapOff } from "lucide-react";
 import {
@@ -40,6 +40,15 @@ const LAMBDA_PRESETS: { name: string; lambdas: LambdaWeights }[] = [
   { name: "Heavy unigram", lambdas: { unigram: 0.4, bigram: 0.3, trigram: 0.2, fourgram: 0.1 } },
 ];
 
+function lambdasSame(a: LambdaWeights, b: LambdaWeights) {
+  return (
+    Math.abs(a.unigram - b.unigram) < 0.0001 &&
+    Math.abs(a.bigram - b.bigram) < 0.0001 &&
+    Math.abs(a.trigram - b.trigram) < 0.0001 &&
+    Math.abs(a.fourgram - b.fourgram) < 0.0001
+  );
+}
+
 interface Row {
   preset: string;
   lambdas: LambdaWeights;
@@ -47,11 +56,21 @@ interface Row {
   perplexity: number;
 }
 
+function normalizedKValue(value: number) {
+  return Number(value.toFixed(3));
+}
+
+function rowsSameConfig(a: Pick<Row, "lambdas" | "k">, b: Pick<Row, "lambdas" | "k">) {
+  return lambdasSame(a.lambdas, b.lambdas) && Math.abs(a.k - b.k) < 0.0001;
+}
+
 export default function TuningPage() {
   const {
     preprocessed,
     split,
     counts,
+    lambdas,
+    k,
     setCounts,
     setLambdas,
     setK,
@@ -61,6 +80,33 @@ export default function TuningPage() {
 
   const [rows, setRows] = useState<Row[]>([]);
   const [running, setRunning] = useState(false);
+
+  const sweepCandidates = useMemo(() => {
+    const current: Row = {
+      preset: "Current LM2 settings",
+      lambdas: { ...lambdas },
+      k: normalizedKValue(k),
+      perplexity: 0,
+    };
+    const presetRows = LAMBDA_PRESETS.flatMap((preset) =>
+      K_VALUES.map((kv) => ({
+        preset: preset.name,
+        lambdas: preset.lambdas,
+        k: kv,
+        perplexity: 0,
+      }))
+    ).filter((row) => !rowsSameConfig(row, current));
+
+    return [current, ...presetRows];
+  }, [lambdas, k]);
+
+  const sweepKValues = useMemo(
+    () =>
+      Array.from(new Set(sweepCandidates.map((candidate) => candidate.k))).sort(
+        (a, b) => a - b
+      ),
+    [sweepCandidates]
+  );
 
   useEffect(() => {
     if (!counts && split && preprocessed) {
@@ -78,21 +124,17 @@ export default function TuningPage() {
         setCounts(c);
       }
       const results: Row[] = [];
-      for (const preset of LAMBDA_PRESETS) {
-        for (const kv of K_VALUES) {
-          const { perplexity } = perplexityInterpolation(
-            split.validation,
-            c,
-            preset.lambdas,
-            kv
-          );
-          results.push({
-            preset: preset.name,
-            lambdas: preset.lambdas,
-            k: kv,
-            perplexity,
-          });
-        }
+      for (const candidate of sweepCandidates) {
+        const { perplexity } = perplexityInterpolation(
+          split.validation,
+          c,
+          candidate.lambdas,
+          candidate.k
+        );
+        results.push({
+          ...candidate,
+          perplexity,
+        });
       }
       results.sort((a, b) => a.perplexity - b.perplexity);
       setRows(results);
@@ -121,7 +163,7 @@ export default function TuningPage() {
   const noData = !split || !preprocessed;
 
   // Build chart: perplexity by k value, averaged across presets
-  const chartByK = K_VALUES.map((kv) => {
+  const chartByK = sweepKValues.map((kv) => {
     const matching = rows.filter((r) => r.k === kv);
     const avg = matching.length
       ? matching.reduce((s, r) => s + r.perplexity, 0) / matching.length
@@ -191,8 +233,8 @@ export default function TuningPage() {
             <CardHeader>
               <CardTitle>Experiment table</CardTitle>
               <CardDescription>
-                {LAMBDA_PRESETS.length} λ presets × {K_VALUES.length} k values ={" "}
-                {LAMBDA_PRESETS.length * K_VALUES.length} configurations.
+                Includes your current LM2 settings plus presets:{" "}
+                {rows.length || sweepCandidates.length} configurations.
               </CardDescription>
             </CardHeader>
             <CardContent>
